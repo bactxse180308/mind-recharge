@@ -1,0 +1,198 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+@layer base {
+  :root {
+    --background: 230 25% 10%;
+    --foreground: 220 20% 88%;
+
+    --card: 230 22% 14%;
+    --card-foreground: 220 20% 88%;
+
+    --popover: 230 22% 14%;
+    --popover-foreground: 220 20% 88%;
+
+    --primary: 260 40% 65%;
+    --primary-foreground: 230 25% 10%;
+
+    --secondary: 230 18% 18%;
+    --secondary-foreground: 220 20% 80%;
+
+    --muted: 230 15% 20%;
+    --muted-foreground: 220 15% 55%;
+
+    --accent: 260 30% 25%;
+    --accent-foreground: 260 40% 80%;
+
+    --destructive: 0 50% 50%;
+    --destructive-foreground: 0 0% 95%;
+
+    --border: 230 15% 20%;
+    --input: 230 15% 22%;
+    --ring: 260 40% 65%;
+
+    --radius: 1rem;
+
+    --sidebar-background: 230 25% 10%;
+    --sidebar-foreground: 220 20% 88%;
+    --sidebar-primary: 260 40% 65%;
+    --sidebar-primary-foreground: 230 25% 10%;
+    --sidebar-accent: 230 18% 18%;
+    --sidebar-accent-foreground: 220 20% 80%;
+    --sidebar-border: 230 15% 20%;
+    --sidebar-ring: 260 40% 65%;
+
+    --healing-glow: 260 60% 70%;
+    --healing-warm: 30 30% 70%;
+    --healing-soft: 260 20% 75%;
+    --healing-success: 160 30% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer utilities {
+  .healing-gradient-bg {
+    background: linear-gradient(160deg, hsl(260 30% 13%), hsl(230 25% 10%), hsl(250 20% 8%));
+    animation: gradientShift 20s ease-in-out infinite alternate;
+    background-size: 200% 200%;
+  }
+
+  .healing-card {
+    @apply bg-card rounded-2xl border border-border/50;
+    box-shadow: 0 4px 24px -4px hsl(260 40% 65% / 0.06);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .healing-card:hover {
+    box-shadow: 0 8px 32px -4px hsl(260 40% 65% / 0.1);
+  }
+
+  .healing-glow {
+    box-shadow: 0 0 40px -10px hsl(260 60% 70% / 0.15);
+  }
+
+  .breathing {
+    animation: breathing 4s ease-in-out infinite;
+  }
+
+  .breathing-bg {
+    animation: breathingBg 4s ease-in-out infinite;
+  }
+
+  .float-up {
+    animation: floatUp 0.6s ease-out both;
+  }
+
+  .fade-in-slow {
+    animation: fadeInSlow 0.8s ease-out both;
+  }
+
+  .dissolve {
+    animation: dissolve 0.8s ease-out forwards;
+  }
+
+  .page-enter {
+    animation: pageEnter 0.35s ease-out both;
+  }
+
+  .btn-press {
+    @apply transition-all duration-150 active:scale-[0.96] active:shadow-none;
+  }
+
+  .glow-cursor {
+    caret-color: hsl(260 60% 70%);
+    text-shadow: 0 0 0 transparent;
+  }
+
+  .glow-cursor:focus {
+    text-shadow: 0 0 20px hsl(260 60% 70% / 0.08);
+  }
+
+  .task-complete {
+    animation: taskComplete 0.5s ease-out;
+  }
+
+  .nav-glow {
+    text-shadow: 0 0 12px hsl(260 60% 70% / 0.4);
+    filter: drop-shadow(0 0 6px hsl(260 60% 70% / 0.2));
+  }
+}
+
+@keyframes breathing {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.03); opacity: 1; }
+}
+
+@keyframes breathingBg {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.008); }
+}
+
+@keyframes floatUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInSlow {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes dissolve {
+  0% { opacity: 1; transform: scale(1); filter: blur(0); }
+  50% { opacity: 0.5; transform: scale(0.98); filter: blur(2px); }
+  100% { opacity: 0; transform: scale(0.95) translateY(-10px); filter: blur(8px); height: 0; margin: 0; padding: 0; overflow: hidden; }
+}
+
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+@keyframes taskComplete {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes circleFill {
+  from { stroke-dashoffset: 283; }
+}
+
+/* Smooth scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(260 20% 30%);
+  border-radius: 999px;
+}
+
+/* Safe area padding for mobile */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 8px);
+  }
+}
