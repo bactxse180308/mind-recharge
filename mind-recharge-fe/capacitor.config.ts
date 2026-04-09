@@ -5,6 +5,13 @@ const config: CapacitorConfig = {
   appName: "Mind Recharge",
   webDir: "dist",
   bundledWebRuntime: false,
+  server: {
+    androidScheme: "http",
+    cleartext: true,
+  },
+  android: {
+    allowMixedContent: true,
+  },
 };
 
 export default config;

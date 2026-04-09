@@ -10,10 +10,13 @@ import java.time.Instant;
 @Builder
 public class UnsentMessageResponse {
     private Long id;
+    /**
+     * Message content — included so the user can see their own messages.
+     * Never logged anywhere in the application.
+     */
+    private String content;
     private UnsentMessageStatus status;
     private Instant releasedAt;
     private Instant createdAt;
     private Instant updatedAt;
-    // NOTE: content is intentionally omitted from list responses for privacy;
-    // only returned on creation so the user sees what they wrote immediately.
 }

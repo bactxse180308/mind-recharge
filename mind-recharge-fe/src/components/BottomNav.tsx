@@ -1,5 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, BookOpen, MessageCircle, Compass, Heart } from "lucide-react";
+import { Home, BookOpen, MessageCircle, Compass, Heart, User } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const tabs = [
   { path: "/", icon: Home, label: "Trang chủ" },
@@ -7,13 +9,24 @@ const tabs = [
   { path: "/unsent", icon: MessageCircle, label: "Chưa gửi" },
   { path: "/tracker", icon: Compass, label: "Hành trình" },
   { path: "/tasks", icon: Heart, label: "Điều nhỏ" },
+  { path: "/profile", icon: User, label: "Hồ sơ" },
 ];
+
+const HIDDEN_PATHS = ["/trigger", "/login"];
 
 const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { isAuthenticated, logout } = useAuth();
 
-  if (location.pathname === "/trigger") return null;
+  if (HIDDEN_PATHS.includes(location.pathname)) return null;
+  if (!isAuthenticated) return null;
+
+  const handleLogout = async () => {
+    await logout();
+    toast.success("Hẹn gặp lại bạn 💜");
+    navigate("/login");
+  };
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 flex justify-center">
@@ -24,6 +37,7 @@ const BottomNav = () => {
             return (
               <button
                 key={path}
+                id={`nav-${label.toLowerCase().replace(/\s+/g, "-")}`}
                 onClick={() => navigate(path)}
                 className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-300 btn-press ${
                   active

@@ -9,7 +9,11 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Service
+/**
+ * DEPRECATED: Sử dụng CustomUserDetailsService thay thế
+ * Class này được giữ để tham khảo, nhưng không được sử dụng trong hệ thống
+ */
+// @Service
 @RequiredArgsConstructor
 public class AppUserDetailsService implements UserDetailsService {
 

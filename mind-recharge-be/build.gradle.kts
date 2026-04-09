@@ -30,9 +30,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
 
     // Database
-    runtimeOnly("org.postgresql:postgresql")
+    implementation("com.microsoft.sqlserver:mssql-jdbc:11.2.0.jre8")
     implementation("org.flywaydb:flyway-core")
-    implementation("org.flywaydb:flyway-database-postgresql")
+    implementation("org.flywaydb:flyway-sqlserver")
 
     // JWT
     implementation("io.jsonwebtoken:jjwt-api:$jjwtVersion")
@@ -58,7 +58,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.testcontainers:junit-jupiter:$testcontainersVersion")
-    testImplementation("org.testcontainers:postgresql:$testcontainersVersion")
+    testImplementation("org.testcontainers:mssqlserver:$testcontainersVersion")
     testCompileOnly("org.projectlombok:lombok")
     testAnnotationProcessor("org.projectlombok:lombok")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

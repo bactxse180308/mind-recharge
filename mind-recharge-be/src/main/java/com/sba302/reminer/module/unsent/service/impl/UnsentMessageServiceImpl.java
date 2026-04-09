@@ -87,6 +87,7 @@ class UnsentMessageServiceImpl implements UnsentMessageService {
     private UnsentMessageResponse toResponse(UnsentMessage m) {
         return UnsentMessageResponse.builder()
                 .id(m.getId())
+                .content(m.getContent())
                 .status(m.getStatus())
                 .releasedAt(m.getReleasedAt())
                 .createdAt(m.getCreatedAt())

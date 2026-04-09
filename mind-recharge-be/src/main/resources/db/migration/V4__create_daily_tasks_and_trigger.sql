@@ -3,12 +3,12 @@
 -- ===== DAILY TASK TEMPLATES =====
 CREATE TABLE daily_task_templates
 (
-    id         BIGSERIAL    NOT NULL PRIMARY KEY,
-    code       VARCHAR(80)  NOT NULL UNIQUE,
-    title      VARCHAR(200) NOT NULL,
-    emoji      VARCHAR(10)  NOT NULL,
-    sort_order INT          NOT NULL DEFAULT 0,
-    is_active  BOOLEAN      NOT NULL DEFAULT TRUE
+    id         BIGINT        NOT NULL PRIMARY KEY IDENTITY(1,1),
+    code       VARCHAR(80)   NOT NULL UNIQUE,
+    title      NVARCHAR(200) NOT NULL,
+    emoji      NVARCHAR(20)  NOT NULL,
+    sort_order INT           NOT NULL DEFAULT 0,
+    is_active  BIT           NOT NULL DEFAULT 1
 );
 
 CREATE INDEX idx_task_template_active ON daily_task_templates (is_active, sort_order);
@@ -16,14 +16,14 @@ CREATE INDEX idx_task_template_active ON daily_task_templates (is_active, sort_o
 -- ===== DAILY TASK LOGS =====
 CREATE TABLE daily_task_logs
 (
-    id               BIGSERIAL                NOT NULL PRIMARY KEY,
+    id               BIGINT                   NOT NULL PRIMARY KEY IDENTITY(1,1),
     user_id          BIGINT                   NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     task_template_id BIGINT                   NOT NULL REFERENCES daily_task_templates (id),
     task_date        DATE                     NOT NULL,
-    is_done          BOOLEAN                  NOT NULL DEFAULT FALSE,
-    done_at          TIMESTAMP WITH TIME ZONE,
-    created_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-    updated_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    is_done          BIT                      NOT NULL DEFAULT 0,
+    done_at          DATETIMEOFFSET,
+    created_at       DATETIMEOFFSET           NOT NULL DEFAULT GETUTCDATE(),
+    updated_at       DATETIMEOFFSET           NOT NULL DEFAULT GETUTCDATE(),
     CONSTRAINT uq_task_log_user_template_date UNIQUE (user_id, task_template_id, task_date)
 );
 
@@ -32,16 +32,16 @@ CREATE INDEX idx_task_log_user_date ON daily_task_logs (user_id, task_date);
 -- ===== EMOTIONAL TRIGGER SESSIONS =====
 CREATE TABLE emotional_trigger_sessions
 (
-    id               BIGSERIAL                NOT NULL PRIMARY KEY,
+    id               BIGINT                   NOT NULL PRIMARY KEY IDENTITY(1,1),
     user_id          BIGINT                   NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     duration_seconds INT                      NOT NULL DEFAULT 600,
     status           VARCHAR(30)              NOT NULL DEFAULT 'RUNNING'
         CONSTRAINT chk_trigger_status CHECK (
             status IN ('RUNNING', 'COMPLETED', 'CANCELLED', 'REDIRECTED_TO_UNSENT')
-        ),
-    started_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-    ended_at         TIMESTAMP WITH TIME ZONE,
-    created_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+            ),
+    started_at       DATETIMEOFFSET           NOT NULL DEFAULT GETUTCDATE(),
+    ended_at         DATETIMEOFFSET,
+    created_at       DATETIMEOFFSET           NOT NULL DEFAULT GETUTCDATE()
 );
 
 CREATE INDEX idx_trigger_user_id ON emotional_trigger_sessions (user_id);

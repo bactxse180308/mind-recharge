@@ -60,4 +60,27 @@ public class ApiResponse<T> {
                 .message("No content")
                 .build();
     }
+
+    public static <T> ApiResponse<T> error(String message) {
+        return ApiResponse.<T>builder()
+                .success(false)
+                .message(message)
+                .build();
+    }
+
+    public static <T> ApiResponse<T> error(int statusCode, String message) {
+        return ApiResponse.<T>builder()
+                .success(false)
+                .message(message)
+                .meta(statusCode)
+                .build();
+    }
+
+    public static <T> ApiResponse<T> error(String message, T data) {
+        return ApiResponse.<T>builder()
+                .success(false)
+                .message(message)
+                .data(data)
+                .build();
+    }
 }

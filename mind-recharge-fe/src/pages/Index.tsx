@@ -1,13 +1,74 @@
-import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { homeApi, checkinApi, type CheckinRequest } from "@/services/homeApi";
+import { useBootstrap } from "@/contexts/BootstrapContext";
+import { HealingTimeline } from "@/components/HealingTimeline";
+import { toast } from "sonner";
 
-const moods = [
-  { emoji: "😞", label: "Rất tệ", response: "Không sao đâu, hôm nay khó khăn thì ngày mai sẽ nhẹ hơn. Bạn đã rất dũng cảm rồi.", color: "from-red-900/20 to-transparent" },
-  { emoji: "😐", label: "Bình thường", response: "Bình thường cũng là ổn. Từng bước nhỏ, bạn đang tiến về phía trước.", color: "from-amber-900/20 to-transparent" },
-  { emoji: "🙂", label: "Đỡ hơn", response: "Tuyệt vời! Bạn đang ổn hơn bạn nghĩ. Tiếp tục nhé 💜", color: "from-emerald-900/20 to-transparent" },
+const MOOD_MAP = [
+  {
+    key: "BAD" as const,
+    emoji: "😞",
+    label: "Rất tệ",
+    color: "from-red-900/20 to-transparent",
+  },
+  {
+    key: "NEUTRAL" as const,
+    emoji: "😐",
+    label: "Bình thường",
+    color: "from-amber-900/20 to-transparent",
+  },
+  {
+    key: "BETTER" as const,
+    emoji: "🙂",
+    label: "Đỡ hơn",
+    color: "from-emerald-900/20 to-transparent",
+  },
 ];
 
 const Index = () => {
-  const [selected, setSelected] = useState<number | null>(null);
+  const qc = useQueryClient();
+  const { randomQuote, moodResponse } = useBootstrap();
+
+  // Home summary
+  const { data: summaryData } = useQuery({
+    queryKey: ["home-summary"],
+    queryFn: () => homeApi.getSummary(),
+  });
+
+  // Today's check-in
+  const { data: checkinData } = useQuery({
+    queryKey: ["checkin-today"],
+    queryFn: () => checkinApi.getToday(),
+    retry: false,
+  });
+
+  const todayMoodKey = checkinData?.data?.moodLevel ?? null;
+  const selectedIndex = todayMoodKey
+    ? MOOD_MAP.findIndex((m) => m.key === todayMoodKey)
+    : null;
+
+  const summary = summaryData?.data;
+
+  // Upsert check-in mutation
+  const { mutate: doCheckin, isPending } = useMutation({
+    mutationFn: (body: CheckinRequest) => checkinApi.upsertToday(body),
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ["checkin-today"] });
+      qc.invalidateQueries({ queryKey: ["home-summary"] });
+      // Prefer BE response text, fall back to bootstrap mood text
+      const responseText = res.data?.responseText ?? moodResponse(res.data?.moodLevel ?? "");
+      if (responseText) toast.success(responseText);
+    },
+    onError: () => toast.error("Không thể lưu cảm xúc, thử lại nhé"),
+  });
+
+  const handleMoodSelect = (idx: number) => {
+    if (isPending) return;
+    doCheckin({ moodLevel: MOOD_MAP[idx].key });
+  };
+
+  const selected = selectedIndex !== null && selectedIndex >= 0 ? selectedIndex : null;
+  const checkinResponse = checkinData?.data?.responseText ?? null;
 
   return (
     <div className="min-h-screen healing-gradient-bg flex flex-col items-center justify-center px-6 pb-24">
@@ -24,17 +85,27 @@ const Index = () => {
           Không cần giấu, ở đây an toàn mà
         </p>
 
+        {/* Summary bar */}
+        {summary && (
+          <div className="flex justify-center gap-6 mb-8 text-xs text-muted-foreground/60">
+            <span>✅ {summary.tasksDoneToday}/{summary.totalTasksToday} nhiệm vụ</span>
+            <span>🌿 {summary.noContactStreakDays} ngày</span>
+          </div>
+        )}
+
         {/* Mood buttons */}
         <div className="flex justify-center gap-4 mb-10">
-          {moods.map((mood, i) => (
+          {MOOD_MAP.map((mood, i) => (
             <button
-              key={i}
-              onClick={() => setSelected(i)}
+              key={mood.key}
+              id={`mood-${mood.key}`}
+              onClick={() => handleMoodSelect(i)}
+              disabled={isPending}
               className={`flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-500 ${
                 selected === i
                   ? "bg-primary/15 scale-105 healing-glow"
                   : "bg-secondary/50 hover:bg-secondary"
-              }`}
+              } disabled:opacity-60`}
             >
               <span className="text-3xl">{mood.emoji}</span>
               <span className="text-xs text-muted-foreground">{mood.label}</span>
@@ -44,17 +115,29 @@ const Index = () => {
 
         {/* Response */}
         {selected !== null && (
-          <div className={`float-up rounded-2xl p-6 bg-gradient-to-b ${moods[selected].color} border border-border/30`}>
+          <div
+            className={`float-up rounded-2xl p-6 bg-gradient-to-b ${MOOD_MAP[selected].color} border border-border/30`}
+          >
             <p className="text-sm leading-relaxed text-foreground/90">
-              {moods[selected].response}
+              {checkinResponse ||
+                (selected === 0
+                  ? "Không sao đâu, hôm nay khó khăn thì ngày mai sẽ nhẹ hơn."
+                  : selected === 1
+                  ? "Bình thường cũng là ổn. Từng bước nhỏ, bạn đang tiến về phía trước."
+                  : "Tuyệt vời! Bạn đang ổn hơn bạn nghĩ. Tiếp tục nhé 💜")}
             </p>
           </div>
         )}
 
-        {/* Quote */}
+        {/* Quote from bootstrap */}
         <p className="mt-12 text-xs text-muted-foreground/60 italic leading-relaxed max-w-[300px] mx-auto">
-          "Bạn nhớ họ, nhưng bạn cũng nhớ mình đã từng mệt như thế nào"
+          "{randomQuote()}"
         </p>
+
+        {/* Healing Journey Timeline */}
+        <div className="w-full mt-12 text-left">
+           <HealingTimeline />
+        </div>
       </div>
     </div>
   );

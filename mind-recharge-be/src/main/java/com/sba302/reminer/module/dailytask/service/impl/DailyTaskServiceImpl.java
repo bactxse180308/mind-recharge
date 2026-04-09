@@ -37,6 +37,9 @@ class DailyTaskServiceImpl implements DailyTaskService {
 
     @Override
     public List<DailyTaskResponse> getToday(Long userId) {
+        if (userId == null) {
+            return buildTaskList(null, LocalDate.now());
+        }
         User user = findUser(userId);
         LocalDate today = LocalDate.now(resolveZone(user.getTimezone()));
         return buildTaskList(userId, today);
@@ -93,7 +96,7 @@ class DailyTaskServiceImpl implements DailyTaskService {
 
     private List<DailyTaskResponse> buildTaskList(Long userId, LocalDate date) {
         List<DailyTaskTemplate> templates = templateRepo.findByIsActiveTrueOrderBySortOrderAsc();
-        List<DailyTaskLog> logs = logRepo.findByUserIdAndTaskDate(userId, date);
+        List<DailyTaskLog> logs = userId != null ? logRepo.findByUserIdAndTaskDate(userId, date) : List.of();
         Map<Long, DailyTaskLog> logByTemplateId = logs.stream()
                 .collect(Collectors.toMap(l -> l.getTaskTemplate().getId(), l -> l));
 

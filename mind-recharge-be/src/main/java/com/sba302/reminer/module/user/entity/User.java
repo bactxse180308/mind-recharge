@@ -48,6 +48,13 @@ public class User {
     @Builder.Default
     private UserStatus status = UserStatus.ACTIVE;
 
+    /**
+     * Quan hệ ManyToOne với Role entity
+     */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -58,4 +65,17 @@ public class User {
 
     @Column(name = "last_login_at")
     private Instant lastLoginAt;
+
+    @Column(name = "security_password_hash", length = 255)
+    private String securityPasswordHash;
+
+    @Column(name = "security_password_updated_at")
+    private Instant securityPasswordUpdatedAt;
+
+    @Column(name = "security_password_failed_attempts", nullable = false)
+    @Builder.Default
+    private Integer securityPasswordFailedAttempts = 0;
+
+    @Column(name = "security_password_locked_until")
+    private Instant securityPasswordLockedUntil;
 }

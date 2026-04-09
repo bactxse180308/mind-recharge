@@ -3,15 +3,15 @@
 -- ===== UNSENT MESSAGES =====
 CREATE TABLE unsent_messages
 (
-    id          BIGSERIAL                NOT NULL PRIMARY KEY,
+    id          BIGINT                   NOT NULL PRIMARY KEY IDENTITY(1,1),
     user_id     BIGINT                   NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     content     TEXT                     NOT NULL,
     status      VARCHAR(20)              NOT NULL DEFAULT 'ACTIVE'
         CONSTRAINT chk_unsent_status CHECK (status IN ('ACTIVE', 'RELEASED', 'DELETED')),
-    released_at TIMESTAMP WITH TIME ZONE,
-    created_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-    updated_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-    deleted_at  TIMESTAMP WITH TIME ZONE
+    released_at DATETIMEOFFSET,
+    created_at  DATETIMEOFFSET           NOT NULL DEFAULT GETUTCDATE(),
+    updated_at  DATETIMEOFFSET           NOT NULL DEFAULT GETUTCDATE(),
+    deleted_at  DATETIMEOFFSET
 );
 
 CREATE INDEX idx_unsent_user_id ON unsent_messages (user_id);
@@ -20,15 +20,15 @@ CREATE INDEX idx_unsent_user_status ON unsent_messages (user_id, status) WHERE d
 -- ===== NO CONTACT JOURNEYS =====
 CREATE TABLE no_contact_journeys
 (
-    id           BIGSERIAL                NOT NULL PRIMARY KEY,
+    id           BIGINT                   NOT NULL PRIMARY KEY IDENTITY(1,1),
     user_id      BIGINT                   NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    started_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-    ended_at     TIMESTAMP WITH TIME ZONE,
+    started_at   DATETIMEOFFSET           NOT NULL DEFAULT GETUTCDATE(),
+    ended_at     DATETIMEOFFSET,
     status       VARCHAR(20)              NOT NULL DEFAULT 'ACTIVE'
         CONSTRAINT chk_journey_status CHECK (status IN ('ACTIVE', 'RESET', 'COMPLETED')),
     reset_reason TEXT,
-    created_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-    updated_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+    created_at   DATETIMEOFFSET           NOT NULL DEFAULT GETUTCDATE(),
+    updated_at   DATETIMEOFFSET           NOT NULL DEFAULT GETUTCDATE()
 );
 
 CREATE INDEX idx_no_contact_user_id ON no_contact_journeys (user_id);
@@ -37,10 +37,10 @@ CREATE INDEX idx_no_contact_active ON no_contact_journeys (user_id, status) WHER
 -- ===== NO CONTACT MILESTONE EVENTS =====
 CREATE TABLE no_contact_milestone_events
 (
-    id            BIGSERIAL                NOT NULL PRIMARY KEY,
+    id            BIGINT                   NOT NULL PRIMARY KEY IDENTITY(1,1),
     journey_id    BIGINT                   NOT NULL REFERENCES no_contact_journeys (id) ON DELETE CASCADE,
     milestone_day INT                      NOT NULL,
-    achieved_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    achieved_at   DATETIMEOFFSET           NOT NULL DEFAULT GETUTCDATE(),
     CONSTRAINT uq_milestone_journey_day UNIQUE (journey_id, milestone_day)
 );
 

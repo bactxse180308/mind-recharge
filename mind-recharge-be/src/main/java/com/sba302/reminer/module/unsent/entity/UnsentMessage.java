@@ -31,7 +31,7 @@ public class UnsentMessage {
     /**
      * Sensitive content — never log this field.
      */
-    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "content", nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String content;
 
     @Enumerated(EnumType.STRING)

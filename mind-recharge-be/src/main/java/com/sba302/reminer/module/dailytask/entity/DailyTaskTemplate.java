@@ -2,6 +2,7 @@ package com.sba302.reminer.module.dailytask.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Nationalized;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +26,11 @@ public class DailyTaskTemplate {
     @Column(name = "code", nullable = false, unique = true, length = 80)
     private String code;
 
+    @Nationalized
     @Column(name = "title", nullable = false, length = 200)
     private String title;
 
+    @Nationalized
     @Column(name = "emoji", nullable = false, length = 10)
     private String emoji;
 

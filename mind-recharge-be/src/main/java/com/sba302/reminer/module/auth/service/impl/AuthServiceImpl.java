@@ -9,7 +9,9 @@ import com.sba302.reminer.module.auth.dto.response.AuthResponse;
 import com.sba302.reminer.module.auth.entity.RefreshToken;
 import com.sba302.reminer.module.auth.repository.RefreshTokenRepository;
 import com.sba302.reminer.module.auth.service.AuthService;
+import com.sba302.reminer.module.user.entity.Role;
 import com.sba302.reminer.module.user.entity.User;
+import com.sba302.reminer.module.user.repository.RoleRepository;
 import com.sba302.reminer.module.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +36,7 @@ import java.util.UUID;
 class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
@@ -53,11 +56,15 @@ class AuthServiceImpl implements AuthService {
             throw AppException.conflict("Email is already registered");
         }
 
+        Role userRole = roleRepository.findByRoleName("USER")
+                .orElseThrow(() -> AppException.notFound("Default role USER not found in database"));
+
         User user = User.builder()
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .displayName(request.getDisplayName())
                 .timezone(StringUtils.hasText(request.getTimezone()) ? request.getTimezone() : "UTC")
+                .role(userRole)
                 .build();
 
         userRepository.save(user);

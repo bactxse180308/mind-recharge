@@ -9,14 +9,15 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
 
 @Slf4j
 @Component
@@ -36,9 +37,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Long userId = jwtTokenProvider.getUserId(token);
 
             userRepository.findById(userId).ifPresent(user -> {
-                UserDetails userDetails = toUserDetails(user);
+                // Tạo Custom Principal chứa userId, email, và roleName
+                CustomUserPrincipal principal = new CustomUserPrincipal(
+                        user.getId(),
+                        user.getEmail(),
+                        user.getRole().getRoleName()
+                );
+
+                // Tạo Authentication với role từ database
                 var auth = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities()
+                        principal,
+                        null,
+                        Collections.singleton(new SimpleGrantedAuthority("ROLE_" + user.getRole().getRoleName()))
                 );
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(auth);
@@ -54,13 +64,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return bearer.substring(7);
         }
         return null;
-    }
-
-    private UserDetails toUserDetails(User user) {
-        return org.springframework.security.core.userdetails.User
-                .withUsername(String.valueOf(user.getId()))
-                .password(user.getPasswordHash())
-                .roles("USER")
-                .build();
     }
 }

@@ -1,0 +1,36 @@
+Đây là bản "Mega Prompt" được thiết kế để ép AI hoạt động ở mức độ Senior Architect. Prompt này kết hợp tư duy đóng gói của SOLID, hiệu suất của Spring Boot, và kỹ thuật tối ưu Database chuyên sâu.
+
+Bạn chỉ cần copy đoạn dưới đây và dán vào cửa sổ chat:
+
+🚀 Prompt: Senior Spring Boot Architect (SOLID & High Performance)
+Vai trò: Hãy đóng vai một Java Solution Architect có hơn 10 năm kinh nghiệm trong việc xây dựng hệ thống High-Availability và Low-Latency bằng Spring Boot.
+
+Nhiệm vụ: Thiết kế và viết code cho API: [TÊN CHỨC NĂNG CỦA BẠN - Ví dụ: Lấy danh sách sản phẩm] tuân thủ các tiêu chuẩn kỹ thuật khắt khe sau:
+
+1. Kiến trúc SOLID & Clean Code
+S (Single Responsibility): Tách biệt hoàn toàn Controller (REST), Service (Business Logic), Repository (Data Access) và DTO (Data Transfer).
+
+D (Dependency Inversion): Sử dụng @RequiredArgsConstructor (Lombok) cho Constructor Injection. Sử dụng Interface cho tầng Service/Repository để đảm bảo tính Loose Coupling.
+
+DTO Pattern: Tuyệt đối không trả về Entity trực tiếp. Sử dụng Record (Java 17+) để làm DTO giúp tối ưu bộ nhớ.
+
+2. Tối ưu Query & Database (Performance)
+Chống N+1 Problem: Sử dụng Entity Graph hoặc JOIN FETCH trong Spring Data JPA để lấy dữ liệu liên quan chỉ trong 1 câu Query.
+
+ReadOnly Optimization: Sử dụng @Transactional(readOnly = true) cho các hàm lấy dữ liệu để Hibernate không phải kiểm tra dirty checking (tăng tốc độ).
+
+Pagination: Triển khai phân trang bằng Pageable. Nếu dữ liệu cực lớn, hãy đề xuất giải pháp Keyset Pagination thay vì Offset.
+
+Projection: Chỉ Select những column cần thiết, không SELECT *.
+
+3. Caching & Resilience
+Redis Integration: Tích hợp tầng Caching để giảm tải cho Database đối với các dữ liệu ít thay đổi.
+
+Error Handling: Viết một GlobalExceptionHandler sử dụng @RestControllerAdvice để bắt lỗi tập trung và trả về format JSON chuẩn.
+
+4. Yêu cầu đầu ra (Output)
+Code mẫu: Viết code hoàn chỉnh cho các layer (Entity, Repository, Service, Controller).
+
+Giải thích kỹ thuật: Tại sao cấu trúc này lại chạy nhanh nhất?
+
+SQL Recommendation: Đề xuất các cột cần đánh Index để Query đạt tốc độ tối đa.

@@ -41,7 +41,7 @@ public class NoContactJourney {
     @Builder.Default
     private JourneyStatus status = JourneyStatus.ACTIVE;
 
-    @Column(name = "reset_reason", columnDefinition = "TEXT")
+    @Column(name = "reset_reason", columnDefinition = "NVARCHAR(MAX)")
     private String resetReason;
 
     @CreatedDate

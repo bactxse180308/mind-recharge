@@ -28,15 +28,16 @@ public class ContentItem {
     @Column(name = "content_key", nullable = false, length = 100)
     private String contentKey;
 
-    @Column(name = "text", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "text", nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String text;
 
     /**
-     * Arbitrary JSONB data (e.g. emoji, color, metadata).
+     * Arbitrary JSON data (e.g. emoji, color, metadata).
      * Mapped as Map<String, Object> — handled by Hibernate's JSON type.
+     * Uses NVARCHAR(MAX) for SQL Server compatibility.
      */
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "extra_jsonb", columnDefinition = "jsonb")
+    @Column(name = "extra_jsonb", columnDefinition = "NVARCHAR(MAX)")
     private Map<String, Object> extraJsonb;
 
     @Column(name = "sort_order", nullable = false)

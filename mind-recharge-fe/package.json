@@ -9,7 +9,7 @@
     "build:dev": "vite build --mode development",
     "cap:sync": "npm run build && npx cap sync",
     "cap:android": "npm run build && npx cap sync android",
-    "android": "npm run cap:android",
+    "android": "npm run build && npx cap sync android && npx cap open android",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
@@ -93,4 +93,5 @@
     "vite": "^5.4.19",
     "vitest": "^3.2.4"
   }
+  
 }

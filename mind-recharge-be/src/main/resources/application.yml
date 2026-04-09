@@ -3,9 +3,9 @@ spring:
     name: reminer
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:mindrecharge}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASS:postgres}
+    url: jdbc:sqlserver://localhost:1433;databaseName=mindrecharge;encrypt=false;trustServerCertificate=true; # MSSQL JDBC URL format
+    username: ${DB_USER:sa}  # MSSQL username, default is 'sa'
+    password: ${DB_PASS:12345}  # MSSQL password, update as necessary
     hikari:
       maximum-pool-size: 10
       minimum-idle: 3
@@ -15,19 +15,20 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
-    show-sql: false
+      ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: false
-        default_schema: public
+        default_schema: dbo  # Default schema for MSSQL is 'dbo'
+        use_nationalized_character_data: true # <--- BẬT NVARCHAR CHO TOÀN BỘ DB
 
   flyway:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
-    validate-on-migrate: true
+    validate-on-migrate: false
+    clean-disabled: false
+    out-of-order: true
 
 server:
   port: ${SERVER_PORT:8080}
@@ -49,7 +50,13 @@ app:
     access-token-expiry-ms: ${JWT_ACCESS_EXPIRY_MS:900000}       # 15 minutes
     refresh-token-expiry-days: ${JWT_REFRESH_EXPIRY_DAYS:30}
   cors:
-    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:3000}
+    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:3000,http://localhost,https://localhost,capacitor://localhost}
+  admin:
+    email: ${ADMIN_EMAIL:admin@mindrecharge.com}
+    password: ${ADMIN_PASSWORD:Admin@123456}
+    full-name: ${ADMIN_FULL_NAME:System Administrator}
+    phone: ${ADMIN_PHONE:0123456789}
+    address: ${ADMIN_ADDRESS:System}
 
 logging:
   level:

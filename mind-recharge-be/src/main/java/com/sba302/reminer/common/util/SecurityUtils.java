@@ -13,9 +13,13 @@ public class SecurityUtils {
      */
     public static Long getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            throw new IllegalStateException("No authenticated user in context");
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return null;
         }
-        return Long.parseLong(auth.getName());
+        try {
+            return Long.parseLong(auth.getName());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }

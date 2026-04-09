@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -32,6 +33,7 @@ class JournalServiceImpl implements JournalService {
 
     private final JournalEntryRepository journalRepo;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -47,6 +49,16 @@ class JournalServiceImpl implements JournalService {
                 .build();
 
         journalRepo.save(entry);
+        
+        eventPublisher.publishEvent(com.sba302.reminer.common.event.JournalSavedEvent.builder()
+                .journalEntryId(entry.getId())
+                .userId(user.getId())
+                .timezone(user.getTimezone())
+                .moodCode(entry.getMoodCode())
+                .content(entry.getContent())
+                .entryAt(entry.getEntryAt())
+                .build());
+
         log.info("Journal created: id={} userId={}", entry.getId(), userId);
         return toResponse(entry);
     }
@@ -80,6 +92,16 @@ class JournalServiceImpl implements JournalService {
         if (StringUtils.hasText(request.getContent())) entry.setContent(request.getContent());
 
         journalRepo.save(entry);
+        
+        eventPublisher.publishEvent(com.sba302.reminer.common.event.JournalSavedEvent.builder()
+                .journalEntryId(entry.getId())
+                .userId(userId)
+                .timezone(entry.getUser().getTimezone())
+                .moodCode(entry.getMoodCode())
+                .content(entry.getContent())
+                .entryAt(entry.getEntryAt())
+                .build());
+
         log.info("Journal updated: id={} userId={}", id, userId);
         return toResponse(entry);
     }

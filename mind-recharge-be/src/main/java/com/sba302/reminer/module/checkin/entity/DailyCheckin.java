@@ -51,7 +51,7 @@ public class DailyCheckin {
     @Column(name = "response_key", nullable = false, length = 100)
     private String responseKey;
 
-    @Column(name = "note", columnDefinition = "TEXT")
+    @Column(name = "note", columnDefinition = "NVARCHAR(MAX)")
     private String note;
 
     @CreatedDate
