@@ -1,6 +1,5 @@
 package com.sba302.reminer.module.unsent.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,6 +7,9 @@ import lombok.Setter;
 @Setter
 public class CreateUnsentMessageRequest {
 
-    @NotBlank(message = "Content is required")
     private String content;
+
+    private String imageUrl;
+
+    private String imageKey;
 }

@@ -40,6 +40,12 @@ class UserServiceImpl implements UserService {
         if (StringUtils.hasText(request.getLocale())) {
             user.setLocale(request.getLocale());
         }
+        if (request.getAvatarUrl() != null) {
+            user.setAvatarUrl(request.getAvatarUrl());
+        }
+        if (request.getAvatarKey() != null) {
+            user.setAvatarKey(request.getAvatarKey());
+        }
 
         userRepository.save(user);
         log.info("Profile updated: userId={}", userId);
@@ -58,6 +64,8 @@ class UserServiceImpl implements UserService {
                 .displayName(user.getDisplayName())
                 .timezone(user.getTimezone())
                 .locale(user.getLocale())
+                .avatarUrl(user.getAvatarUrl())
+                .avatarKey(user.getAvatarKey())
                 .status(user.getStatus())
                 .createdAt(user.getCreatedAt())
                 .lastLoginAt(user.getLastLoginAt())

@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 
@@ -32,9 +33,15 @@ class UnsentMessageServiceImpl implements UnsentMessageService {
     @Transactional
     public UnsentMessageResponse create(Long userId, CreateUnsentMessageRequest request) {
         User user = findUser(userId);
+        if (!StringUtils.hasText(request.getContent()) && !StringUtils.hasText(request.getImageUrl())) {
+            throw AppException.badRequest("Content or image is required");
+        }
+
         UnsentMessage msg = UnsentMessage.builder()
                 .user(user)
-                .content(request.getContent())
+                .content(StringUtils.hasText(request.getContent()) ? request.getContent().trim() : "")
+                .imageUrl(request.getImageUrl())
+                .imageKey(request.getImageKey())
                 .build();
         unsentRepo.save(msg);
         log.info("Unsent message created: id={} userId={}", msg.getId(), userId);
@@ -88,6 +95,8 @@ class UnsentMessageServiceImpl implements UnsentMessageService {
         return UnsentMessageResponse.builder()
                 .id(m.getId())
                 .content(m.getContent())
+                .imageUrl(m.getImageUrl())
+                .imageKey(m.getImageKey())
                 .status(m.getStatus())
                 .releasedAt(m.getReleasedAt())
                 .createdAt(m.getCreatedAt())

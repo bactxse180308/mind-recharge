@@ -78,4 +78,10 @@ public class User {
 
     @Column(name = "security_password_locked_until")
     private Instant securityPasswordLockedUntil;
+
+    @Column(name = "avatar_url", length = 1000)
+    private String avatarUrl;
+
+    @Column(name = "avatar_key", length = 500)
+    private String avatarKey;
 }

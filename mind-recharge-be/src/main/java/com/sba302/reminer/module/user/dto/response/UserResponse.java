@@ -14,6 +14,8 @@ public class UserResponse {
     private String displayName;
     private String timezone;
     private String locale;
+    private String avatarUrl;
+    private String avatarKey;
     private UserStatus status;
     private Instant createdAt;
     private Instant lastLoginAt;

@@ -46,6 +46,9 @@ dependencies {
     // OpenAPI / Swagger
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6")
 
+    // Cloudflare R2 / S3 compatible storage
+    implementation("software.amazon.awssdk:s3:2.31.64")
+
     // Lombok
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
