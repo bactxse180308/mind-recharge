@@ -54,6 +54,7 @@ public class SecurityConfig {
                         // Public auth endpoints
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login",
                                 "/api/v1/auth/refresh").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/images/view").permitAll()
                         // Public generic data routines (bootstrap, daily-tasks/today)
                         .requestMatchers(HttpMethod.GET, "/api/v1/bootstrap", "/api/v1/daily-tasks/today").permitAll()
                         // OpenAPI / Swagger

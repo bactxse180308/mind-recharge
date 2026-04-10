@@ -1,23 +1,29 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trash2 } from "lucide-react";
+import { ImagePlus, LoaderCircle, Trash2, X } from "lucide-react";
 import {
   unsentMessageApi,
   type UnsentMessageResponse,
 } from "@/services/unsentMessageApi";
+import { imageApi } from "@/services/imageApi";
 import { toast } from "sonner";
 import { SecuritySessionManager } from "@/lib/securitySession";
+import ImageLightbox from "@/components/ImageLightbox";
 
 const UnsentMessages = () => {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [input, setInput] = useState("");
+  const [draftImageUrl, setDraftImageUrl] = useState("");
+  const [draftImageKey, setDraftImageKey] = useState("");
   const [releasingId, setReleasingId] = useState<number | null>(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState("");
 
-  // Security Mode states
   const initialToken = SecuritySessionManager.get();
-  const [viewMode, setViewMode] = useState<"GUARD" | "LOCKED" | "TRANSITION" | "UNLOCKED">("GUARD");
+  const [viewMode, setViewMode] = useState<
+    "GUARD" | "LOCKED" | "TRANSITION" | "UNLOCKED"
+  >("GUARD");
   const [guardSecs, setGuardSecs] = useState(10);
   const [unlockToken, setUnlockToken] = useState<string>(initialToken || "");
   const [pin, setPin] = useState("");
@@ -25,7 +31,6 @@ const UnsentMessages = () => {
   const [sessionMsg, setSessionMsg] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Guard Countdown
   useEffect(() => {
     if (viewMode === "GUARD" && guardSecs > 0) {
       const timer = setTimeout(() => setGuardSecs((s) => s - 1), 1000);
@@ -40,29 +45,25 @@ const UnsentMessages = () => {
     retry: false,
   });
 
-  // Handle API 401 expiration
   useEffect(() => {
     if (isError && (error as any)?.status === 401) {
       SecuritySessionManager.clear();
       setUnlockToken("");
       setViewMode("LOCKED");
-      setSessionMsg("Bạn cần nhập lại mật khẩu để tiếp tục 🫶");
+      setSessionMsg("Bạn cần nhập lại mật khẩu để tiếp tục.");
     }
   }, [isError, error]);
 
-  // Handle app background auto-lock (> 1 min)
   useEffect(() => {
     let bgTime: number | null = null;
     const visibilityChange = () => {
       if (document.hidden) {
         bgTime = Date.now();
-      } else {
-        if (bgTime && Date.now() - bgTime > 60000) {
-          SecuritySessionManager.clear();
-          setUnlockToken("");
-          setViewMode("LOCKED");
-          setSessionMsg("Đã quá lâu rồi. Bạn cần nhập lại mật khẩu để tiếp tục 🫶");
-        }
+      } else if (bgTime && Date.now() - bgTime > 60000) {
+        SecuritySessionManager.clear();
+        setUnlockToken("");
+        setViewMode("LOCKED");
+        setSessionMsg("Đã qua lâu rồi. Bạn cần nhập lại mật khẩu để tiếp tục.");
       }
     };
     document.addEventListener("visibilitychange", visibilityChange);
@@ -72,19 +73,34 @@ const UnsentMessages = () => {
   const messages: UnsentMessageResponse[] = data?.data ?? [];
 
   const { mutate: createMsg, isPending: isSending } = useMutation({
-    mutationFn: (content: string) => unsentMessageApi.create(content),
+    mutationFn: (body: { content?: string; imageUrl?: string; imageKey?: string }) =>
+      unsentMessageApi.create(body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["unsent-messages"] });
       setInput("");
+      setDraftImageUrl("");
+      setDraftImageKey("");
     },
     onError: () => toast.error("Không thể gửi, thử lại nhé"),
+  });
+
+  const { mutate: uploadUnsentImage, isPending: isUploadingImage } = useMutation({
+    mutationFn: (file: File) => imageApi.upload(file),
+    onSuccess: (res) => {
+      setDraftImageUrl(res.data.imageUrl);
+      setDraftImageKey(res.data.key);
+      toast.success("Ảnh đã sẵn sàng để gửi.");
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Không thể tải ảnh lên");
+    },
   });
 
   const { mutate: releaseMsg } = useMutation({
     mutationFn: (id: number) => unsentMessageApi.release(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["unsent-messages"] });
-      toast.success("Bạn vừa buông thêm một chút 💜");
+      toast.success("Bạn vừa buông thêm một chút");
       setReleasingId(null);
     },
     onError: () => {
@@ -97,27 +113,35 @@ const UnsentMessages = () => {
     mutationFn: (pass: string) => unsentMessageApi.unlock(pass),
     onSuccess: (res) => {
       const token = res.data.unlockToken;
-      const expiresIn = res.data.expiresIn || 300; // default 5 mins
+      const expiresIn = res.data.expiresIn || 300;
       SecuritySessionManager.set(token, expiresIn);
       setUnlockToken(token);
       setSessionMsg("");
       setViewMode("TRANSITION");
-      setTimeout(() => {
-        setViewMode("UNLOCKED");
-      }, 1500); // Wait 1.5s as requested
+      setTimeout(() => setViewMode("UNLOCKED"), 1500);
     },
     onError: () => {
       setShake(true);
       setTimeout(() => setShake(false), 600);
       setPin("");
-      if (inputRef.current) inputRef.current.focus();
-    }
+      inputRef.current?.focus();
+    },
   });
 
-
   const send = () => {
-    if (!input.trim() || isSending) return;
-    createMsg(input.trim());
+    if ((!input.trim() && !draftImageUrl) || isSending || isUploadingImage) return;
+    createMsg({
+      content: input.trim() || undefined,
+      imageUrl: draftImageUrl || undefined,
+      imageKey: draftImageKey || undefined,
+    });
+  };
+
+  const handleImageSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    uploadUnsentImage(file);
+    e.target.value = "";
   };
 
   const dissolveMessage = (id: number) => {
@@ -135,32 +159,48 @@ const UnsentMessages = () => {
     return (
       <div className="min-h-screen healing-gradient-bg flex flex-col items-center justify-center px-6 relative overflow-hidden page-enter">
         <div className="absolute inset-0 bg-background/95 backdrop-blur-md" />
-
         <div className="relative z-10 w-full max-w-[420px] flex flex-col items-center justify-center text-center -mt-10">
           <h1 className="text-xl font-light text-foreground/90 mb-5 tracking-wide fade-in-slow">
-            bạn phải quên người ấy, nếu không Bạn sẽ hối hận đấy?
+            Bạn phải quên người ấy, nếu không bạn sẽ hối hận đấy?
           </h1>
-          <div className="h-16 flex items-center justify-center mb-8">
-            <p className="text-sm text-rose-400/90 tracking-wide transition-all duration-1000 px-4 leading-relaxed" style={{ animation: 'fadeIn 1s ease-in 2s forwards', opacity: 0 }}>
-              "Bạn phải quên người ấy, nếu không bạn sẽ hối hận đấy..."
-            </p>
-          </div>
 
           <div className="h-40 flex flex-col items-center justify-center mt-2">
             {guardSecs > 0 ? (
               <div className="flex flex-col items-center fade-in-slow">
                 <div className="relative w-16 h-16 flex items-center justify-center mb-4 text-primary">
                   <svg className="absolute inset-0 w-full h-full -rotate-90">
-                    <circle cx="32" cy="32" r="30" fill="none" stroke="currentColor" strokeWidth="1" className="opacity-20" />
-                    <circle cx="32" cy="32" r="30" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="188" strokeDashoffset={188 - (188 * (10 - guardSecs)) / 10} className="transition-all duration-1000 ease-linear" />
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="30"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1"
+                      className="opacity-20"
+                    />
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="30"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeDasharray="188"
+                      strokeDashoffset={188 - (188 * (10 - guardSecs)) / 10}
+                      className="transition-all duration-1000 ease-linear"
+                    />
                   </svg>
                   <span className="text-lg font-light">{guardSecs}</span>
                 </div>
-                <p className="text-[11px] text-muted-foreground/40 italic">Hãy suy nghĩ thật kỹ...</p>
+                <p className="text-[11px] text-muted-foreground/40 italic">
+                  Hãy suy nghĩ thật kỹ...
+                </p>
               </div>
             ) : (
               <button
-                onClick={() => setViewMode(SecuritySessionManager.get() ? "UNLOCKED" : "LOCKED")}
+                onClick={() =>
+                  setViewMode(SecuritySessionManager.get() ? "UNLOCKED" : "LOCKED")
+                }
                 className="px-8 py-3 rounded-full border border-rose-900/30 text-rose-400 hover:bg-rose-900/10 transition-all text-sm btn-press fade-in-slow"
               >
                 Mình vẫn muốn tiếp tục
@@ -182,7 +222,6 @@ const UnsentMessages = () => {
   if (viewMode === "LOCKED") {
     return (
       <div className="min-h-screen healing-gradient-bg flex flex-col items-center justify-center px-6 relative w-full h-full overflow-hidden">
-        {/* Subtle blur background overlay */}
         <div className="absolute inset-0 backdrop-blur-sm pointer-events-none" />
 
         <div className="relative z-10 w-full max-w-[420px] flex flex-col items-center page-enter">
@@ -193,20 +232,28 @@ const UnsentMessages = () => {
             {sessionMsg || "Nhập mật khẩu bảo mật để tiếp tục"}
           </p>
 
-          <div className={`flex gap-4 mb-4 ${shake ? "animate-shake" : ""}`} onClick={() => inputRef.current?.focus()}>
-            {[0, 1, 2, 3].map(i => (
+          <div
+            className={`flex gap-4 mb-4 ${shake ? "animate-shake" : ""}`}
+            onClick={() => inputRef.current?.focus()}
+          >
+            {[0, 1, 2, 3].map((i) => (
               <div
                 key={i}
-                className={`w-3.5 h-3.5 rounded-full transition-all duration-300 ${pin.length > i
+                className={`w-3.5 h-3.5 rounded-full transition-all duration-300 ${
+                  pin.length > i
                     ? "bg-primary scale-110 shadow-[0_0_8px_rgba(167,139,250,0.6)]"
                     : "bg-primary/20 scale-100"
-                  }`}
+                }`}
               />
             ))}
           </div>
 
           <div className="h-6 mt-4">
-            {shake && <p className="text-sm text-primary/80 float-up italic">Mật khẩu chưa đúng, thử lại nhé 🫶</p>}
+            {shake && (
+              <p className="text-sm text-primary/80 float-up italic">
+                Mật khẩu chưa đúng, thử lại nhé
+              </p>
+            )}
           </div>
 
           <input
@@ -218,7 +265,7 @@ const UnsentMessages = () => {
             maxLength={4}
             value={pin}
             onChange={(e) => {
-              const v = e.target.value.replace(/\D/g, '').slice(0, 4);
+              const v = e.target.value.replace(/\D/g, "").slice(0, 4);
               setPin(v);
               if (v.length === 4 && !isUnlocking) unlock(v);
             }}
@@ -233,19 +280,21 @@ const UnsentMessages = () => {
           </button>
         </div>
 
-        {/* Keyframe animation injected inline */}
-        <style dangerouslySetInnerHTML={{
-          __html: `
-          @keyframes shake-gentle {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-4px); }
-            50% { transform: translateX(4px); }
-            75% { transform: translateX(-4px); }
-          }
-          .animate-shake {
-             animation: shake-gentle 0.4s ease-in-out;
-          }
-        `}} />
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+            @keyframes shake-gentle {
+              0%, 100% { transform: translateX(0); }
+              25% { transform: translateX(-4px); }
+              50% { transform: translateX(4px); }
+              75% { transform: translateX(-4px); }
+            }
+            .animate-shake {
+              animation: shake-gentle 0.4s ease-in-out;
+            }
+          `,
+          }}
+        />
       </div>
     );
   }
@@ -253,14 +302,15 @@ const UnsentMessages = () => {
   if (viewMode === "TRANSITION") {
     return (
       <div className="min-h-screen healing-gradient-bg flex items-center justify-center px-6">
-        <p className="text-base text-foreground/80 float-up italic tracking-wide text-center fade-in-slow" style={{ animationDuration: '1.5s' }}>
+        <p
+          className="text-base text-foreground/80 float-up italic tracking-wide text-center fade-in-slow"
+          style={{ animationDuration: "1.5s" }}
+        >
           Hãy hít thở một chút trước khi đọc lại...
         </p>
       </div>
     );
   }
-
-  // UNLOCKED MODE
 
   if (isLoading) {
     return (
@@ -283,19 +333,19 @@ const UnsentMessages = () => {
           </p>
         </div>
 
-        {/* Messages */}
         <div className="flex-1 space-y-3 overflow-y-auto mb-4">
           {messages.map((msg, i) => (
             <div
               key={msg.id}
-              className={`flex justify-end items-center gap-2 float-up group ${releasingId === msg.id ? "dissolve" : ""
-                }`}
+              className={`flex justify-end items-center gap-2 float-up group ${
+                releasingId === msg.id ? "dissolve" : ""
+              }`}
               style={{ animationDelay: `${i * 0.08}s` }}
             >
               <button
                 onClick={() => dissolveMessage(msg.id)}
                 className="opacity-40 lg:opacity-0 lg:group-hover:opacity-100 text-muted-foreground/50 hover:!text-rose-400 p-1.5 transition-all btn-press"
-                title="Buông bỏ (xóa)"
+                title="Buông bỏ"
               >
                 <Trash2 size={15} />
               </button>
@@ -315,9 +365,36 @@ const UnsentMessages = () => {
                 }}
                 className="max-w-[80%] healing-card p-3.5 cursor-pointer transition-all duration-500 blur-[1px] hover:blur-none"
               >
-                <p className="text-sm text-foreground/90 leading-relaxed">
-                  {msg.content ?? `✦ Tin nhắn #${msg.id}`}
-                </p>
+                {msg.imageUrl && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPreviewImageUrl(
+                        imageApi.buildViewUrl(msg.imageKey, msg.imageUrl) || ""
+                      )
+                    }
+                    className="mb-3 block w-full"
+                  >
+                    <img
+                      src={imageApi.buildViewUrl(msg.imageKey, msg.imageUrl)}
+                      alt="Ảnh đính kèm chưa gửi"
+                      className="max-h-72 w-full rounded-2xl object-cover"
+                    />
+                  </button>
+                )}
+
+                {msg.content?.trim() && (
+                  <p className="text-sm text-foreground/90 leading-relaxed">
+                    {msg.content}
+                  </p>
+                )}
+
+                {!msg.content?.trim() && !msg.imageUrl && (
+                  <p className="text-sm text-foreground/90 leading-relaxed">
+                    Tin nhan #{msg.id}
+                  </p>
+                )}
+
                 <span className="text-[10px] text-muted-foreground/50 mt-1 block text-right">
                   {formatTime(msg.createdAt)}
                 </span>
@@ -332,7 +409,6 @@ const UnsentMessages = () => {
           )}
         </div>
 
-        {/* Trigger link */}
         <button
           id="go-trigger-btn"
           onClick={() => navigate("/trigger")}
@@ -341,8 +417,45 @@ const UnsentMessages = () => {
           Mình muốn nhắn thật cho họ...
         </button>
 
-        {/* Input */}
+        {draftImageUrl && (
+          <div className="mb-3 rounded-3xl border border-primary/15 bg-background/60 p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Ảnh đính kèm</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setDraftImageUrl("");
+                  setDraftImageKey("");
+                }}
+                className="rounded-full p-1 text-muted-foreground/70 transition hover:bg-secondary/40 hover:text-foreground"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            <img
+              src={draftImageUrl}
+              alt="Xem trước ảnh đính kèm"
+              className="max-h-60 w-full rounded-2xl object-cover"
+            />
+          </div>
+        )}
+
         <div className="flex gap-2">
+          <label className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-2xl bg-secondary/50 text-muted-foreground transition-all hover:bg-secondary/70 hover:text-foreground">
+            {isUploadingImage ? (
+              <LoaderCircle size={18} className="animate-spin" />
+            ) : (
+              <ImagePlus size={18} />
+            )}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+              className="hidden"
+              onChange={handleImageSelected}
+              disabled={isUploadingImage}
+            />
+          </label>
+
           <input
             id="unsent-input"
             value={input}
@@ -351,11 +464,12 @@ const UnsentMessages = () => {
             placeholder="Viết những gì bạn muốn nói..."
             className="flex-1 bg-secondary/50 rounded-2xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:ring-1 focus:ring-primary/20 glow-cursor transition-all"
           />
-          {input.trim() && (
+
+          {(input.trim() || draftImageUrl) && (
             <button
               id="send-unsent-btn"
               onClick={send}
-              disabled={isSending}
+              disabled={isSending || isUploadingImage}
               className="bg-primary/20 text-primary px-4 rounded-2xl text-sm hover:bg-primary/30 transition-all btn-press disabled:opacity-50"
             >
               {isSending ? "..." : "Gửi"}
@@ -363,6 +477,13 @@ const UnsentMessages = () => {
           )}
         </div>
       </div>
+
+      <ImageLightbox
+        open={!!previewImageUrl}
+        imageUrl={previewImageUrl}
+        alt="Ảnh đính kèm chưa gửi"
+        onClose={() => setPreviewImageUrl("")}
+      />
     </div>
   );
 };

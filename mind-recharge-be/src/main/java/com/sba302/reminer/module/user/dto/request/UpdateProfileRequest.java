@@ -15,4 +15,8 @@ public class UpdateProfileRequest {
     private String timezone;
 
     private String locale;
+
+    private String avatarUrl;
+
+    private String avatarKey;
 }

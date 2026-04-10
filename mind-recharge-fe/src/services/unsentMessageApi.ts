@@ -2,10 +2,11 @@ import { apiFetch } from "@/lib/apiClient";
 import type { ApiResponse } from "./authApi";
 import type { ApiResponseList } from "./homeApi";
 
-// ─── Types ───────────────────────────────────────────────────
 export interface UnsentMessageResponse {
   id: number;
-  content?: string; // may be absent for old messages before fix
+  content?: string;
+  imageUrl?: string;
+  imageKey?: string;
   status: "ACTIVE" | "RELEASED" | "DELETED";
   releasedAt?: string;
   createdAt: string;
@@ -14,9 +15,13 @@ export interface UnsentMessageResponse {
 
 export type UnsentMessageStatus = "ACTIVE" | "RELEASED" | "DELETED";
 
-// ─── API calls ───────────────────────────────────────────────
 export const unsentMessageApi = {
-  list: (unlockToken: string, status: UnsentMessageStatus = "ACTIVE", page = 0, size = 20) => {
+  list: (
+    unlockToken: string,
+    status: UnsentMessageStatus = "ACTIVE",
+    page = 0,
+    size = 20
+  ) => {
     const headers = unlockToken ? { "X-Unlock-Token": unlockToken } : undefined;
     return apiFetch<ApiResponseList<UnsentMessageResponse>>(
       `/api/v1/unsent-messages?status=${status}&page=${page}&size=${size}`,
@@ -24,7 +29,7 @@ export const unsentMessageApi = {
     );
   },
 
-  unlock: (securityPassword: string) => 
+  unlock: (securityPassword: string) =>
     apiFetch<ApiResponse<{ unlockToken: string; expiresIn: number }>>(
       "/api/v1/unsent-messages/unlock",
       {
@@ -33,10 +38,10 @@ export const unsentMessageApi = {
       }
     ),
 
-  create: (content: string) =>
+  create: (body: { content?: string; imageUrl?: string; imageKey?: string }) =>
     apiFetch<ApiResponse<UnsentMessageResponse>>("/api/v1/unsent-messages", {
       method: "POST",
-      body: JSON.stringify({ content }),
+      body: JSON.stringify(body),
     }),
 
   release: (id: number) =>

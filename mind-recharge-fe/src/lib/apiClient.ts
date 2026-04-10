@@ -49,11 +49,15 @@ export async function apiFetch<T = unknown>(
   options: RequestInit = {}
 ): Promise<T> {
   const token = TokenStorage.getAccess();
+  const isFormData =
+    typeof FormData !== "undefined" && options.body instanceof FormData;
 
   const headers: Record<string, string> = {
-    "Content-Type": "application/json; charset=utf-8",
     ...(options.headers as Record<string, string>),
   };
+  if (!isFormData && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json; charset=utf-8";
+  }
 
   if (token) headers["Authorization"] = `Bearer ${token}`;
 

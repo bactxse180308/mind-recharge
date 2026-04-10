@@ -15,6 +15,8 @@ public class UnsentMessageResponse {
      * Never logged anywhere in the application.
      */
     private String content;
+    private String imageUrl;
+    private String imageKey;
     private UnsentMessageStatus status;
     private Instant releasedAt;
     private Instant createdAt;

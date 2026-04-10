@@ -1,13 +1,14 @@
 import { apiFetch } from "@/lib/apiClient";
 import type { ApiResponse } from "./authApi";
 
-// ─── Types ───────────────────────────────────────────────────
 export interface UserResponse {
   id: number;
   email: string;
   displayName: string;
   timezone: string;
   locale: string;
+  avatarUrl?: string;
+  avatarKey?: string;
   status: "ACTIVE" | "INACTIVE" | "SUSPENDED";
   createdAt: string;
   lastLoginAt: string;
@@ -17,6 +18,8 @@ export interface UpdateProfileRequest {
   displayName?: string;
   timezone?: string;
   locale?: string;
+  avatarUrl?: string;
+  avatarKey?: string;
 }
 
 export interface ChangePasswordRequest {
@@ -24,10 +27,8 @@ export interface ChangePasswordRequest {
   newPassword?: string;
 }
 
-// ─── API calls ───────────────────────────────────────────────
 export const userApi = {
-  getMe: () =>
-    apiFetch<ApiResponse<UserResponse>>("/api/v1/users/me"),
+  getMe: () => apiFetch<ApiResponse<UserResponse>>("/api/v1/users/me"),
 
   updateMe: (body: UpdateProfileRequest) =>
     apiFetch<ApiResponse<UserResponse>>("/api/v1/users/me", {
@@ -36,19 +37,19 @@ export const userApi = {
     }),
 
   changePassword: (userId: number, body: ChangePasswordRequest) =>
-    apiFetch<ApiResponse<any>>(`/api/v1/users/${userId}/change-password`, {
+    apiFetch<ApiResponse<unknown>>(`/api/v1/users/${userId}/change-password`, {
       method: "POST",
       body: JSON.stringify(body),
     }),
 
   setupSecurityPassword: (securityPassword: string) =>
-    apiFetch<ApiResponse<any>>("/api/v1/users/security-password", {
+    apiFetch<ApiResponse<unknown>>("/api/v1/users/security-password", {
       method: "POST",
       body: JSON.stringify({ securityPassword }),
     }),
 
   changeSecurityPassword: (oldPassword: string, newPassword: string) =>
-    apiFetch<ApiResponse<any>>("/api/v1/users/security-password", {
+    apiFetch<ApiResponse<unknown>>("/api/v1/users/security-password", {
       method: "PUT",
       body: JSON.stringify({ oldPassword, newPassword }),
     }),
