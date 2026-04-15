@@ -125,10 +125,21 @@ jobs:
           mv "\${APP_DIR}/app.jar.upload" "\${APP_DIR}/app.jar"
 
           systemctl restart "\${SERVICE_NAME}"
-          sleep 20
-
           systemctl is-active --quiet "\${SERVICE_NAME}"
-          curl --fail --silent --show-error "\${HEALTHCHECK_URL}" >/dev/null
+
+          for i in $(seq 1 18); do
+            if curl --fail --silent --show-error "\${HEALTHCHECK_URL}" >/dev/null; then
+              echo "Healthcheck succeeded on attempt \$i"
+              exit 0
+            fi
+
+            echo "Waiting for app to become healthy... attempt \$i/18"
+            sleep 5
+          done
+
+          echo "Healthcheck did not succeed within 90 seconds"
+          systemctl status "\${SERVICE_NAME}" --no-pager || true
+          exit 1
           EOF
 
       - name: Show recent logs on failure
