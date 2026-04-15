@@ -16,6 +16,7 @@ public class UserResponse {
     private String locale;
     private String avatarUrl;
     private String avatarKey;
+    private Boolean hasSecurityPassword;
     private UserStatus status;
     private Instant createdAt;
     private Instant lastLoginAt;

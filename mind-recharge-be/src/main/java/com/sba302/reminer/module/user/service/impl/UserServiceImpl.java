@@ -100,6 +100,7 @@ class UserServiceImpl implements UserService {
                 .locale(user.getLocale())
                 .avatarUrl(user.getAvatarUrl())
                 .avatarKey(user.getAvatarKey())
+                .hasSecurityPassword(user.getSecurityPasswordHash() != null && !user.getSecurityPasswordHash().isBlank())
                 .status(user.getStatus())
                 .createdAt(user.getCreatedAt())
                 .lastLoginAt(user.getLastLoginAt())

@@ -9,6 +9,7 @@ export interface UserResponse {
   locale: string;
   avatarUrl?: string;
   avatarKey?: string;
+  hasSecurityPassword?: boolean;
   status: "ACTIVE" | "INACTIVE" | "SUSPENDED";
   createdAt: string;
   lastLoginAt: string;

@@ -42,6 +42,7 @@ const Profile = () => {
   const [secMode, setSecMode] = useState<"CREATE" | "CHANGE">("CREATE");
   const [oldSecPass, setOldSecPass] = useState("");
   const [newSecPass, setNewSecPass] = useState("");
+  const [hasSecPassOverride, setHasSecPassOverride] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["user-profile"],
@@ -53,10 +54,7 @@ const Profile = () => {
     avatarKey || profile?.avatarKey,
     avatarUrl || profile?.avatarUrl
   );
-  const hasSecPass =
-    !!profile?.securityPasswordHash ||
-    !!profile?.securityPasswordUpdatedAt ||
-    profile?.hasSecurityPassword;
+  const hasSecPass = !!profile?.hasSecurityPassword || hasSecPassOverride;
 
   useEffect(() => {
     if (!profile) return;
@@ -206,10 +204,12 @@ const Profile = () => {
     setOldSecPass("");
     setNewSecPass("");
   };
-
   const { mutate: setupSecPass, isPending: isSettingUpSec } = useMutation({
     mutationFn: () => userApi.setupSecurityPassword(newSecPass),
     onSuccess: () => {
+      setHasSecPassOverride(true);
+      setSecMode("CHANGE");
+      qc.invalidateQueries({ queryKey: ["user-profile"] });
       toast.success("Mã bảo mật đã được thiết lập");
       closeSecConfig();
     },
@@ -220,6 +220,9 @@ const Profile = () => {
   const { mutate: changeSecPass, isPending: isChangingSec } = useMutation({
     mutationFn: () => userApi.changeSecurityPassword(oldSecPass, newSecPass),
     onSuccess: () => {
+      setHasSecPassOverride(true);
+      setSecMode("CHANGE");
+      qc.invalidateQueries({ queryKey: ["user-profile"] });
       toast.success("Mã bảo mật đã được thay đổi");
       closeSecConfig();
     },
@@ -584,21 +587,23 @@ const Profile = () => {
                       Thiết lập lần đầu
                     </button>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => setSecMode("CHANGE")}
-                    className={`text-[11px] pb-2 px-1 transition-all ${
-                      secMode === "CHANGE"
-                        ? "text-primary border-b-[1.5px] border-primary font-medium"
-                        : "text-muted-foreground/60"
-                    }`}
-                  >
-                    {hasSecPass ? "Cập nhật mã bảo mật" : "Đổi mã mới"}
-                  </button>
+                  {hasSecPass && (
+                    <button
+                      type="button"
+                      onClick={() => setSecMode("CHANGE")}
+                      className={`text-[11px] pb-2 px-1 transition-all ${
+                        secMode === "CHANGE"
+                          ? "text-primary border-b-[1.5px] border-primary font-medium"
+                          : "text-muted-foreground/60"
+                      }`}
+                    >
+                      Cập nhật mã bảo mật
+                    </button>
+                  )}
                 </div>
 
                 <form onSubmit={handleConfigSecPass} className="space-y-4">
-                  {secMode === "CHANGE" && (
+                  {hasSecPass && secMode === "CHANGE" && (
                     <div className="space-y-1 fade-in-slow">
                       <label className="text-[10px] text-muted-foreground/60 pl-1">
                         Mã bảo mật hiện tại

@@ -6,10 +6,13 @@ import {
   unsentMessageApi,
   type UnsentMessageResponse,
 } from "@/services/unsentMessageApi";
+import { userApi } from "@/services/userApi";
 import { imageApi } from "@/services/imageApi";
 import { toast } from "sonner";
 import { SecuritySessionManager } from "@/lib/securitySession";
 import ImageLightbox from "@/components/ImageLightbox";
+
+const GUARD_SECONDS = 5;
 
 const UnsentMessages = () => {
   const navigate = useNavigate();
@@ -24,7 +27,7 @@ const UnsentMessages = () => {
   const [viewMode, setViewMode] = useState<
     "GUARD" | "LOCKED" | "TRANSITION" | "UNLOCKED"
   >("GUARD");
-  const [guardSecs, setGuardSecs] = useState(10);
+  const [guardSecs, setGuardSecs] = useState(GUARD_SECONDS);
   const [unlockToken, setUnlockToken] = useState<string>(initialToken || "");
   const [pin, setPin] = useState("");
   const [shake, setShake] = useState(false);
@@ -37,6 +40,14 @@ const UnsentMessages = () => {
       return () => clearTimeout(timer);
     }
   }, [viewMode, guardSecs]);
+
+  const { data: profileResponse } = useQuery({
+    queryKey: ["user-profile"],
+    queryFn: () => userApi.getMe(),
+  });
+
+  const profile = profileResponse?.data;
+  const hasSecPass = !!profile?.hasSecurityPassword;
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["unsent-messages", unlockToken],
@@ -186,7 +197,9 @@ const UnsentMessages = () => {
                       stroke="currentColor"
                       strokeWidth="2"
                       strokeDasharray="188"
-                      strokeDashoffset={188 - (188 * (10 - guardSecs)) / 10}
+                      strokeDashoffset={
+                        188 - (188 * (GUARD_SECONDS - guardSecs)) / GUARD_SECONDS
+                      }
                       className="transition-all duration-1000 ease-linear"
                     />
                   </svg>
@@ -229,55 +242,63 @@ const UnsentMessages = () => {
             Không phải ai cũng thấy được những điều này
           </h1>
           <p className="text-sm tracking-wide text-foreground/60 mb-10 text-center px-4">
-            {sessionMsg || "Nhập mật khẩu bảo mật để tiếp tục"}
+            {hasSecPass
+              ? sessionMsg || "Nhập mật khẩu bảo mật để tiếp tục"
+              : "Bạn chưa tạo mã bảo mật. Hãy cài đặt trong Hồ sơ để mở hộp Chưa gửi."}
           </p>
 
-          <div
-            className={`flex gap-4 mb-4 ${shake ? "animate-shake" : ""}`}
-            onClick={() => inputRef.current?.focus()}
-          >
-            {[0, 1, 2, 3].map((i) => (
+          {hasSecPass ? (
+            <>
               <div
-                key={i}
-                className={`w-3.5 h-3.5 rounded-full transition-all duration-300 ${
-                  pin.length > i
-                    ? "bg-primary scale-110 shadow-[0_0_8px_rgba(167,139,250,0.6)]"
-                    : "bg-primary/20 scale-100"
-                }`}
+                className={`flex gap-4 mb-4 ${shake ? "animate-shake" : ""}`}
+                onClick={() => inputRef.current?.focus()}
+              >
+                {[0, 1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className={`w-3.5 h-3.5 rounded-full transition-all duration-300 ${
+                      pin.length > i
+                        ? "bg-primary scale-110 shadow-[0_0_8px_rgba(167,139,250,0.6)]"
+                        : "bg-primary/20 scale-100"
+                    }`}
+                  />
+                ))}
+              </div>
+
+              <div className="h-6 mt-4">
+                {shake && (
+                  <p className="text-sm text-primary/80 float-up italic">
+                    Mật khẩu chưa đúng, thử lại nhé
+                  </p>
+                )}
+              </div>
+
+              <input
+                ref={inputRef}
+                autoFocus
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={4}
+                value={pin}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/\D/g, "").slice(0, 4);
+                  setPin(v);
+                  if (v.length === 4 && !isUnlocking) unlock(v);
+                }}
+                className="absolute opacity-0 -z-10 focus:outline-none"
               />
-            ))}
-          </div>
+            </>
+          ) : null}
 
-          <div className="h-6 mt-4">
-            {shake && (
-              <p className="text-sm text-primary/80 float-up italic">
-                Mật khẩu chưa đúng, thử lại nhé
-              </p>
-            )}
-          </div>
-
-          <input
-            ref={inputRef}
-            autoFocus
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            maxLength={4}
-            value={pin}
-            onChange={(e) => {
-              const v = e.target.value.replace(/\D/g, "").slice(0, 4);
-              setPin(v);
-              if (v.length === 4 && !isUnlocking) unlock(v);
-            }}
-            className="absolute opacity-0 -z-10 focus:outline-none"
-          />
-
-          <button
-            onClick={() => navigate("/profile")}
-            className="mt-12 text-xs text-muted-foreground/50 hover:text-primary transition-colors btn-press"
-          >
-            Chưa có mã bảo mật? Cài đặt ở Hồ sơ
-          </button>
+          {!hasSecPass && (
+            <button
+              onClick={() => navigate("/profile")}
+              className="mt-8 rounded-full border border-primary/30 px-5 py-2.5 text-sm text-primary hover:bg-primary/10 transition-colors btn-press"
+            >
+              Đi tới Hồ sơ để tạo mã bảo mật
+            </button>
+          )}
         </div>
 
         <style
