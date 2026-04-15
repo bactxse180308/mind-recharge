@@ -29,10 +29,29 @@ function createCallId() {
   return `call-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+function encodeSignalText(value?: string) {
+  if (!value) return value;
+  return `b64:${btoa(value)}`;
+}
+
+function decodeSignalText(value?: string) {
+  if (!value) return value;
+  if (!value.startsWith("b64:")) {
+    return value;
+  }
+
+  try {
+    return atob(value.slice(4));
+  } catch (error) {
+    console.error("[Call] Failed to decode signal payload", error);
+    return value;
+  }
+}
+
 function toCandidatePayload(event: CallSignalEvent): RTCIceCandidateInit {
   return {
-    candidate: event.candidate ?? "",
-    sdpMid: event.sdpMid ?? null,
+    candidate: decodeSignalText(event.candidate) ?? "",
+    sdpMid: decodeSignalText(event.sdpMid) ?? null,
     sdpMLineIndex: event.sdpMLineIndex ?? null,
   };
 }
@@ -89,6 +108,10 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
           callId: session.callId,
           signalType,
           ...extra,
+          sdp: encodeSignalText(extra.sdp),
+          candidate: encodeSignalText(extra.candidate),
+          sdpMid: encodeSignalText(extra.sdpMid),
+          sdpMLineIndex: extra.sdpMLineIndex,
         }),
       });
     },
@@ -224,7 +247,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
         updateActiveCall({ ...session, status: "connecting" });
 
         try {
-          const answer = await handleOffer(event.sdp);
+          const answer = await handleOffer(decodeSignalText(event.sdp) ?? "");
           if (!answer?.sdp) {
             throw new Error("Answer SDP is missing");
           }
@@ -243,7 +266,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
         }
 
         try {
-          await handleAnswer(event.sdp);
+          await handleAnswer(decodeSignalText(event.sdp) ?? "");
           updateActiveCall({ ...session, status: "connecting" });
         } catch (error) {
           console.error("[Call] Failed to apply remote answer", error);
