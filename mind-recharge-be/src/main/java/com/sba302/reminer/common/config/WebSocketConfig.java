@@ -10,11 +10,14 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
 import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Configuration
 @EnableWebSocketMessageBroker
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+    private static final String PRODUCTION_WEB_ORIGIN = "https://mind-recharge.vercel.app";
 
     private final WebSocketAuthChannelInterceptor webSocketAuthChannelInterceptor;
 
@@ -30,11 +33,14 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+        Set<String> origins = new LinkedHashSet<>(Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .toList());
+        origins.add(PRODUCTION_WEB_ORIGIN);
+
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns(Arrays.stream(allowedOrigins.split(","))
-                        .map(String::trim)
-                        .filter(origin -> !origin.isEmpty())
-                        .toArray(String[]::new));
+                .setAllowedOriginPatterns(origins.toArray(String[]::new));
     }
 
     @Override
