@@ -75,26 +75,49 @@ jobs:
           chmod 600 ~/.ssh/known_hosts
           ssh-keyscan -p "${DEPLOY_PORT:-22}" -H "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
 
+      - name: Diagnose SSH connection
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Deploy host: ${DEPLOY_HOST}"
+          echo "Deploy port: ${DEPLOY_PORT:-22}"
+          echo "Deploy user: ${DEPLOY_USER}"
+          echo "App dir: ${APP_DIR:-/opt/myapp}"
+
+          ssh -vvv -o BatchMode=yes -o ConnectTimeout=15 \
+            -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "echo 'SSH authentication succeeded'; whoami; pwd"
+
       - name: Upload jar
+        shell: bash
         run: |
           set -euo pipefail
           APP_DIR="${APP_DIR:-/opt/myapp}"
+          echo "Uploading jar to ${DEPLOY_USER}@${DEPLOY_HOST}:${APP_DIR}/app.jar.upload"
           scp -P "${DEPLOY_PORT:-22}" \
             "mind-recharge-be/build/libs/reminer-0.0.1-SNAPSHOT.jar" \
             "${DEPLOY_USER}@${DEPLOY_HOST}:${APP_DIR}/app.jar.upload"
 
       - name: Restart service and verify
+        shell: bash
         run: |
           set -euo pipefail
           APP_DIR="${APP_DIR:-/opt/myapp}"
           SERVICE_NAME="${SERVICE_NAME:-myapp.service}"
           HEALTHCHECK_URL="${HEALTHCHECK_URL:-http://127.0.0.1:8080/api/v1/health}"
 
+          echo "Restarting service ${SERVICE_NAME}"
+          echo "Healthcheck URL: ${HEALTHCHECK_URL}"
+
           ssh -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" <<EOF
           set -euo pipefail
           APP_DIR="${APP_DIR}"
           SERVICE_NAME="${SERVICE_NAME}"
           HEALTHCHECK_URL="${HEALTHCHECK_URL}"
+
+          echo "Remote user: \$(whoami)"
+          echo "Remote app dir: \${APP_DIR}"
+          ls -ld "\${APP_DIR}"
 
           test -f "\${APP_DIR}/app.jar.upload"
 
@@ -113,8 +136,10 @@ jobs:
 
       - name: Show recent logs on failure
         if: failure()
+        shell: bash
         run: |
           set +e
           SERVICE_NAME="${SERVICE_NAME:-myapp.service}"
+          echo "Failure diagnostics for ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PORT:-22}"
           ssh -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "journalctl -u ${SERVICE_NAME} -n 120 --no-pager"
