@@ -46,7 +46,7 @@ jobs:
           chmod +x ./gradlew
           ./gradlew --no-daemon clean test bootJar
 
-      - name: Start SSH agent
+      - name: Prepare SSH key
         shell: bash
         run: |
           set -euo pipefail
@@ -61,9 +61,6 @@ jobs:
             echo "VPS_SSH_PRIVATE_KEY is not a valid OpenSSH private key"
             exit 1
           fi
-
-          eval "$(ssh-agent -s)"
-          ssh-add ~/.ssh/deploy_key
 
       - name: Trust VPS host key
         shell: bash
@@ -84,7 +81,7 @@ jobs:
           echo "Deploy user: ${DEPLOY_USER}"
           echo "App dir: ${APP_DIR:-/opt/myapp}"
 
-          ssh -vvv -o BatchMode=yes -o ConnectTimeout=15 \
+          ssh -vvv -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=15 \
             -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "echo 'SSH authentication succeeded'; whoami; pwd"
 
@@ -94,7 +91,7 @@ jobs:
           set -euo pipefail
           APP_DIR="${APP_DIR:-/opt/myapp}"
           echo "Uploading jar to ${DEPLOY_USER}@${DEPLOY_HOST}:${APP_DIR}/app.jar.upload"
-          scp -P "${DEPLOY_PORT:-22}" \
+          scp -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -P "${DEPLOY_PORT:-22}" \
             "mind-recharge-be/build/libs/reminer-0.0.1-SNAPSHOT.jar" \
             "${DEPLOY_USER}@${DEPLOY_HOST}:${APP_DIR}/app.jar.upload"
 
@@ -109,7 +106,7 @@ jobs:
           echo "Restarting service ${SERVICE_NAME}"
           echo "Healthcheck URL: ${HEALTHCHECK_URL}"
 
-          ssh -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" <<EOF
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" <<EOF
           set -euo pipefail
           APP_DIR="${APP_DIR}"
           SERVICE_NAME="${SERVICE_NAME}"
@@ -141,5 +138,5 @@ jobs:
           set +e
           SERVICE_NAME="${SERVICE_NAME:-myapp.service}"
           echo "Failure diagnostics for ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PORT:-22}"
-          ssh -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "journalctl -u ${SERVICE_NAME} -n 120 --no-pager"
