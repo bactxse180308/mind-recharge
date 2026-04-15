@@ -127,7 +127,7 @@ jobs:
           systemctl restart "\${SERVICE_NAME}"
           systemctl is-active --quiet "\${SERVICE_NAME}"
 
-          for i in $(seq 1 18); do
+          for i in \$(seq 1 18); do
             if curl --fail --silent --show-error "\${HEALTHCHECK_URL}" >/dev/null; then
               echo "Healthcheck succeeded on attempt \$i"
               exit 0
