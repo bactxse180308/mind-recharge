@@ -58,7 +58,11 @@ class ReminerApplicationTests {
 
         assertThat(corsConfiguration).isNotNull();
         assertThat(corsConfiguration.getAllowedOrigins())
-                .containsExactly("http://localhost:3000", "https://app.example.com");
+                .containsExactly(
+                        "http://localhost:3000",
+                        "https://app.example.com",
+                        "https://mind-recharge.vercel.app"
+                );
         assertThat(corsConfiguration.getAllowedMethods()).contains("OPTIONS");
         assertThat(corsConfiguration.getAllowCredentials()).isTrue();
     }
