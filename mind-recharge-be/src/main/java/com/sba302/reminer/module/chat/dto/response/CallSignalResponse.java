@@ -17,5 +17,6 @@ public class CallSignalResponse {
     private String candidate;
     private String sdpMid;
     private Integer sdpMLineIndex;
+    private String reason;
     private Instant createdAt;
 }

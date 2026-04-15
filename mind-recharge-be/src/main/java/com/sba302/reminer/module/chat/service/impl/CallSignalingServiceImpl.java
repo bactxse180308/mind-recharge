@@ -30,8 +30,8 @@ class CallSignalingServiceImpl implements CallSignalingService {
     @Override
     public void publishSignal(Long userId, CallSignalRequest request) {
         validatePayload(request);
-        log.debug("Call signal received: userId={} conversationId={} callId={} signalType={}",
-                userId, request.getConversationId(), request.getCallId(), request.getSignalType());
+        log.debug("Call signal received: userId={} conversationId={} callId={} signalType={} reason={}",
+                userId, request.getConversationId(), request.getCallId(), request.getSignalType(), request.getReason());
 
         ConversationParticipant senderParticipant = participantRepository
                 .findByConversationIdAndUserId(request.getConversationId(), userId)
@@ -55,18 +55,20 @@ class CallSignalingServiceImpl implements CallSignalingService {
                 .candidate(trimToNull(request.getCandidate()))
                 .sdpMid(trimToNull(request.getSdpMid()))
                 .sdpMLineIndex(request.getSdpMLineIndex())
+                .reason(trimToNull(request.getReason()))
                 .createdAt(Instant.now())
                 .build();
 
         recipients.forEach(participant ->
                 realtimeNotifier.notifyUser(participant.getUser().getId(), event));
 
-        log.debug("Call signal forwarded: fromUserId={} toUserIds={} conversationId={} callId={} signalType={}",
+        log.debug("Call signal forwarded: fromUserId={} toUserIds={} conversationId={} callId={} signalType={} reason={}",
                 userId,
                 recipients.stream().map(participant -> participant.getUser().getId()).toList(),
                 request.getConversationId(),
                 request.getCallId(),
-                request.getSignalType());
+                request.getSignalType(),
+                request.getReason());
     }
 
     private void validatePayload(CallSignalRequest request) {

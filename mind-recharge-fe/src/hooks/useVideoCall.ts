@@ -13,6 +13,8 @@ interface UseVideoCallOptions {
 export function useVideoCall(options: UseVideoCallOptions = {}) {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [isMicMuted, setIsMicMuted] = useState(false);
+  const [isCameraEnabled, setIsCameraEnabled] = useState(true);
 
   const localStreamRef = useRef<MediaStream | null>(null);
   const remoteStreamRef = useRef<MediaStream | null>(null);
@@ -65,7 +67,31 @@ export function useVideoCall(options: UseVideoCallOptions = {}) {
 
     localStreamRef.current = stream;
     setLocalStream(stream);
+    setIsMicMuted(false);
+    setIsCameraEnabled(stream.getVideoTracks().some((track) => track.enabled));
     return stream;
+  }, []);
+
+  const toggleTrackKind = useCallback((kind: "audio" | "video") => {
+    const stream = localStreamRef.current;
+    if (!stream) return;
+
+    const tracks = kind === "audio" ? stream.getAudioTracks() : stream.getVideoTracks();
+    if (tracks.length === 0) return;
+
+    const nextEnabled = !tracks[0].enabled;
+    tracks.forEach((track) => {
+      track.enabled = nextEnabled;
+    });
+
+    if (kind === "audio") {
+      setIsMicMuted(!nextEnabled);
+      console.info("[Call] Audio track toggled", { enabled: nextEnabled });
+      return;
+    }
+
+    setIsCameraEnabled(nextEnabled);
+    console.info("[Call] Video track toggled", { enabled: nextEnabled });
   }, []);
 
   const flushPendingIceCandidates = useCallback(async () => {
@@ -213,6 +239,8 @@ export function useVideoCall(options: UseVideoCallOptions = {}) {
 
     setLocalStream(null);
     setRemoteStream(null);
+    setIsMicMuted(false);
+    setIsCameraEnabled(true);
   }, [closePeerConnection, stopStream]);
 
   useEffect(() => cleanup, [cleanup]);
@@ -220,11 +248,15 @@ export function useVideoCall(options: UseVideoCallOptions = {}) {
   return {
     localStream,
     remoteStream,
+    isMicMuted,
+    isCameraEnabled,
     ensureLocalStream,
     createOffer,
     handleOffer,
     handleAnswer,
     addIceCandidate,
+    toggleMicrophone: () => toggleTrackKind("audio"),
+    toggleCamera: () => toggleTrackKind("video"),
     cleanup,
   };
 }

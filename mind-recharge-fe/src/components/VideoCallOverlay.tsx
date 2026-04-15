@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { PhoneOff, Video } from "lucide-react";
+import { Mic, MicOff, PhoneOff, Video, VideoOff } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { imageApi } from "@/services/imageApi";
@@ -10,9 +10,13 @@ interface VideoCallOverlayProps {
   activeCall: CallSession | null;
   localStream: MediaStream | null;
   remoteStream: MediaStream | null;
+  isMicMuted: boolean;
+  isCameraEnabled: boolean;
   onAcceptIncomingCall: () => void;
   onRejectIncomingCall: () => void;
   onEndCall: () => void;
+  onToggleMicrophone: () => void;
+  onToggleCamera: () => void;
 }
 
 function getInitial(value?: string) {
@@ -49,19 +53,23 @@ function StreamVideo({
 function getStatusLabel(call: CallSession | null) {
   if (!call) return "";
 
+  if (call.status === "incoming") {
+    return "Cuoc goi den";
+  }
+
   if (call.status === "calling") {
-    return "Dang doi doi phuong chap nhan...";
+    return "Dang goi va cho doi phuong bat may";
   }
 
   if (call.status === "connecting") {
-    return "Dang ket noi video...";
+    return "Dang ket noi video";
   }
 
   if (call.status === "connected") {
     return "Da ket noi";
   }
 
-  return "Cuoc goi den";
+  return "Dang goi";
 }
 
 export default function VideoCallOverlay({
@@ -69,9 +77,13 @@ export default function VideoCallOverlay({
   activeCall,
   localStream,
   remoteStream,
+  isMicMuted,
+  isCameraEnabled,
   onAcceptIncomingCall,
   onRejectIncomingCall,
   onEndCall,
+  onToggleMicrophone,
+  onToggleCamera,
 }: VideoCallOverlayProps) {
   const peerUser = activeCall?.peerUser;
   const avatarSrc = imageApi.buildViewUrl(peerUser?.avatarKey, peerUser?.avatarUrl);
@@ -151,21 +163,47 @@ export default function VideoCallOverlay({
 
           {localStream && (
             <div className="absolute right-4 top-20 overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-2xl">
-              <StreamVideo
-                stream={localStream}
-                muted
-                className="h-36 w-24 object-cover sm:h-44 sm:w-32"
-              />
+              <div className="relative">
+                <StreamVideo
+                  stream={localStream}
+                  muted
+                  className="h-36 w-24 object-cover sm:h-44 sm:w-32"
+                />
+                {!isCameraEnabled && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/70 text-xs text-white/80">
+                    Camera tat
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
           <div className="absolute inset-x-0 top-20 flex justify-center px-6">
-            <div className="rounded-full bg-black/45 px-4 py-2 text-sm text-white/85 backdrop-blur">
-              {peerUser?.displayName || "Doi phuong"} - {getStatusLabel(activeCall)}
+            <div className="rounded-2xl bg-black/45 px-4 py-3 text-sm text-white/85 backdrop-blur">
+              <div className="text-center">
+                <p>{peerUser?.displayName || "Doi phuong"} - {getStatusLabel(activeCall)}</p>
+                <p className="mt-1 text-[11px] text-white/55">
+                  Call ID: {activeCall.callId.slice(0, 8)}
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="absolute inset-x-0 bottom-10 flex justify-center">
+          <div className="absolute inset-x-0 bottom-10 flex justify-center gap-4 px-6">
+            <button
+              type="button"
+              onClick={onToggleMicrophone}
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-white/15 text-white shadow-2xl transition-transform hover:scale-105"
+            >
+              {isMicMuted ? <MicOff size={22} /> : <Mic size={22} />}
+            </button>
+            <button
+              type="button"
+              onClick={onToggleCamera}
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-white/15 text-white shadow-2xl transition-transform hover:scale-105"
+            >
+              {isCameraEnabled ? <Video size={22} /> : <VideoOff size={22} />}
+            </button>
             <button
               type="button"
               onClick={onEndCall}

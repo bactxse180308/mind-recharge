@@ -9,6 +9,25 @@ export type CallSignalType =
   | "call.ice-candidate"
   | "call.end";
 
+export type CallSignalReason =
+  | "busy"
+  | "declined"
+  | "missed"
+  | "cancelled"
+  | "no-answer"
+  | "connection-timeout"
+  | "network-lost"
+  | "page-unload"
+  | "permission-denied"
+  | "connection-failed"
+  | "ended";
+
+export type CallSessionStatus =
+  | "incoming"
+  | "calling"
+  | "connecting"
+  | "connected";
+
 export interface CallSignalEvent {
   eventType: CallSignalType;
   signalType: CallSignalType;
@@ -19,6 +38,7 @@ export interface CallSignalEvent {
   candidate?: string;
   sdpMid?: string;
   sdpMLineIndex?: number;
+  reason?: CallSignalReason;
   createdAt?: string;
 }
 
@@ -27,7 +47,9 @@ export interface CallSession {
   conversationId: number;
   peerUser: ChatUserSummary;
   direction: "incoming" | "outgoing";
-  status: "incoming" | "calling" | "connecting" | "connected";
+  status: CallSessionStatus;
+  startedAt: number;
+  connectedAt?: number;
 }
 
 export interface CallContextValue {
@@ -36,8 +58,12 @@ export interface CallContextValue {
   localStream: MediaStream | null;
   remoteStream: MediaStream | null;
   isRealtimeReady: boolean;
+  isMicMuted: boolean;
+  isCameraEnabled: boolean;
   startOutgoingCall: (conversation: ChatConversation) => Promise<void>;
   acceptIncomingCall: () => Promise<void>;
   rejectIncomingCall: () => void;
   endCall: () => void;
+  toggleMicrophone: () => void;
+  toggleCamera: () => void;
 }

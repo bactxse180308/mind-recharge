@@ -32,4 +32,7 @@ public class CallSignalRequest {
     private String sdpMid;
 
     private Integer sdpMLineIndex;
+
+    @Size(max = 64)
+    private String reason;
 }
