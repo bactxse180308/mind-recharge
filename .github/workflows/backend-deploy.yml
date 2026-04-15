@@ -47,14 +47,32 @@ jobs:
           ./gradlew --no-daemon clean test bootJar
 
       - name: Start SSH agent
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "${DEPLOY_SSH_KEY}" | tr -d '\r' > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          if ! grep -q "BEGIN .* PRIVATE KEY" ~/.ssh/deploy_key; then
+            echo "VPS_SSH_PRIVATE_KEY is not a valid OpenSSH private key"
+            exit 1
+          fi
+
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/deploy_key
 
       - name: Trust VPS host key
+        shell: bash
         run: |
           set -euo pipefail
           mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          touch ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
           ssh-keyscan -p "${DEPLOY_PORT:-22}" -H "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
 
       - name: Upload jar
