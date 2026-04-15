@@ -1,0 +1,24 @@
+Tên dự án: Mind Recharge (Reminer)
+Bối cảnh dự án:
+Dự án "Mind Recharge" (tên package: reminer) là một hệ thống backend được xây dựng bằng Spring Boot nhằm hỗ trợ người dùng trong việc chăm sóc sức khỏe tinh thần và phục hồi cảm xúc. 
+
+Cụ thể, ứng dụng tập trung vào việc giúp người dùng vượt qua các giai đoạn khó khăn (ví dụ như sau khi chia tay hoặc gặp biến cố tâm lý) thông qua các công cụ theo dõi và trị liệu tự thân.
+
+Các phân hệ chính trong dự án:
+1. Authentication (Xác thực): Quản lý đăng nhập, đăng ký và bảo mật người dùng.
+2. User Profile (Hồ sơ): Quản lý thông tin cá nhân và múi giờ (để tính toán streak và lịch trình chính xác).
+3. Journaling (Nhật ký): Cho phép người dùng viết các bài viết phản hồi, ghi lại suy nghĩ hàng ngày.
+4. Daily Check-ins (Điểm danh cảm xúc): Theo dõi tâm trạng và trạng thái tinh thần định kỳ.
+5. Unsent Messages (Tin nhắn chưa gửi): Một công cụ tâm lý cho phép người dùng viết ra những điều muốn nói nhưng không gửi đi để giải tỏa cảm xúc.
+6. No-Contact Journey (Hành trình không liên lạc): Theo dõi số ngày người dùng duy trì việc không liên lạc với đối phương (thường dùng trong quá trình hồi phục sau chia tay).
+7. Emotional Triggers (Tác nhân cảm xúc): Giúp người dùng nhận diện và ghi lại các tình huống hoặc sự kiện gây ra phản ứng tiêu cực.
+8. Daily Tasks (Nhiệm vụ hàng ngày): Thiết lập các thói quen nhỏ để xây dựng lối sống lành mạnh.
+9. Content (Nội dung): Cung cấp các tài liệu, bài viết hỗ trợ sức khỏe tinh thần.
+10. Bootstrap/Home: Cung cấp các cấu hình và dữ liệu ban đầu cho ứng dụng.
+
+Công nghệ sử dụng:
+- Java 17+, Spring Boot 3/4.
+- Spring Data JPA, Spring Security, Spring Web.
+- PostgreSQL (dựa trên cấu hình db migration).
+- Flyway/Liquibase cho migration dữ liệu.
+- Cấu trúc project tuân thủ mô hình Controller-Service-Repository với DTO và Mapper.

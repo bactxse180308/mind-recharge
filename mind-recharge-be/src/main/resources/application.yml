@@ -1,0 +1,85 @@
+spring:
+  config:
+    import: "optional:file:.env[.properties],optional:file:./mind-recharge-be/.env[.properties]"
+
+  application:
+    name: reminer
+
+  servlet:
+    multipart:
+      max-file-size: ${MULTIPART_MAX_FILE_SIZE}
+      max-request-size: ${MULTIPART_MAX_REQUEST_SIZE}
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:${DB_URL}}
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USER}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASS}}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 3
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    database-platform: org.hibernate.dialect.SQLServerDialect
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: false
+        default_schema: dbo
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: false
+    clean-disabled: false
+    out-of-order: true
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  default-produces-media-type: application/json
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    access-token-expiry-ms: ${JWT_ACCESS_EXPIRY_MS}
+    refresh-token-expiry-days: ${JWT_REFRESH_EXPIRY_DAYS}
+  upload:
+    image:
+      max-file-size-bytes: ${IMAGE_MAX_FILE_SIZE_BYTES}
+  cors:
+    allowed-origins: ${CORS_ORIGINS}
+  admin:
+    email: ${ADMIN_EMAIL}
+    password: ${ADMIN_PASSWORD}
+    full-name: ${ADMIN_FULL_NAME}
+    phone: ${ADMIN_PHONE}
+    address: ${ADMIN_ADDRESS}
+
+r2:
+  endpoint: ${R2_ENDPOINT}
+  access-key: ${R2_ACCESS_KEY}
+  secret-key: ${R2_SECRET_KEY}
+  bucket-name: ${R2_BUCKET_NAME}
+  public-url: ${R2_PUBLIC_URL}
+
+logging:
+  level:
+    root: INFO
+    com.sba302.reminer: DEBUG
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
