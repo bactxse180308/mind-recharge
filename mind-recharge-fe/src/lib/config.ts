@@ -2,6 +2,7 @@ import { Capacitor } from '@capacitor/core';
 
 const isNative = Capacitor.isNativePlatform();
 const API_BASE_OVERRIDE_KEY = 'mr_api_base_url';
+const WEBRTC_ICE_SERVERS_ENV = 'VITE_WEBRTC_ICE_SERVERS';
 
 function normalizeBaseUrl(value?: string): string | undefined {
   const trimmed = value?.trim();
@@ -80,3 +81,24 @@ export const API_BASE_SOURCE = runtimeOverrideBaseUrl
   : isNative
     ? 'native-env'
     : 'web-env';
+
+function parseIceServers(): RTCIceServer[] {
+  const rawValue = import.meta.env[WEBRTC_ICE_SERVERS_ENV]?.trim();
+  if (!rawValue) {
+    return [{ urls: 'stun:stun.l.google.com:19302' }];
+  }
+
+  try {
+    const parsed = JSON.parse(rawValue);
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      throw new Error('ICE server config must be a non-empty array');
+    }
+
+    return parsed as RTCIceServer[];
+  } catch (error) {
+    console.error('[Call] Invalid VITE_WEBRTC_ICE_SERVERS config', error);
+    return [{ urls: 'stun:stun.l.google.com:19302' }];
+  }
+}
+
+export const WEBRTC_ICE_SERVERS = parseIceServers();

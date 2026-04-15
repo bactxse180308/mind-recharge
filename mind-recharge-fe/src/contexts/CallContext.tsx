@@ -76,6 +76,11 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
       if (!client?.connected) {
         throw new Error("Realtime connection is not ready");
       }
+      console.info("[Call] Sending signal", {
+        signalType,
+        conversationId: session.conversationId,
+        callId: session.callId,
+      });
 
       client.publish({
         destination: "/app/call/signal",
@@ -149,6 +154,13 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const handleSignal = useCallback(
     async (event: CallSignalEvent) => {
+      console.info("[Call] Received signal", {
+        signalType: event.signalType,
+        conversationId: event.conversationId,
+        callId: event.callId,
+        fromUserId: event.fromUser?.id,
+      });
+
       const session =
         activeCallRef.current && activeCallRef.current.callId === event.callId
           ? activeCallRef.current
@@ -197,7 +209,8 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
           }
 
           sendSignal("call.offer", session, { sdp: offer.sdp });
-        } catch {
+        } catch (error) {
+          console.error("[Call] Failed to create/send offer", error);
           handlePeerDisconnected("Khong the bat dau cuoc goi video.");
         }
         return;
@@ -217,7 +230,8 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
           }
 
           sendSignal("call.answer", session, { sdp: answer.sdp });
-        } catch {
+        } catch (error) {
+          console.error("[Call] Failed to handle/send answer", error);
           handlePeerDisconnected("Khong the ket noi cuoc goi video.");
         }
         return;
@@ -231,7 +245,8 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
         try {
           await handleAnswer(event.sdp);
           updateActiveCall({ ...session, status: "connecting" });
-        } catch {
+        } catch (error) {
+          console.error("[Call] Failed to apply remote answer", error);
           handlePeerDisconnected("Khong the hoan tat ket noi cuoc goi.");
         }
         return;
@@ -240,7 +255,8 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
       if (event.signalType === "call.ice-candidate") {
         try {
           await addIceCandidate(toCandidatePayload(event));
-        } catch {
+        } catch (error) {
+          console.error("[Call] Failed to add ICE candidate", error);
           handlePeerDisconnected("Khong the trao doi thong tin ket noi.");
         }
         return;
@@ -285,6 +301,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
 
     clientRef.current = client;
     client.onConnect = () => {
+      console.info("[Call] Realtime channel connected");
       setIsRealtimeReady(true);
       client.subscribe("/user/queue/call", (frame) => {
         try {
@@ -296,12 +313,15 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
       });
     };
     client.onDisconnect = () => {
+      console.warn("[Call] Realtime channel disconnected");
       setIsRealtimeReady(false);
     };
     client.onWebSocketClose = () => {
+      console.warn("[Call] WebSocket closed");
       setIsRealtimeReady(false);
     };
-    client.onStompError = () => {
+    client.onStompError = (frame) => {
+      console.error("[Call] STOMP error", frame.headers["message"], frame.body);
       setIsRealtimeReady(false);
       toast.error("Kenh cuoc goi bi loi.");
     };
@@ -361,7 +381,8 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
 
         updateActiveCall(nextCall);
         sendSignal("call.invite", nextCall);
-      } catch {
+      } catch (error) {
+        console.error("[Call] Failed to start outgoing call", error);
         cleanup();
         clearCallState();
         toast.error("Khong the truy cap camera hoac micro.");
@@ -387,7 +408,8 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
       updateIncomingCall(null);
       updateActiveCall({ ...session, status: "connecting" });
       sendSignal("call.accept", session);
-    } catch {
+    } catch (error) {
+      console.error("[Call] Failed to accept incoming call", error);
       cleanup();
       clearCallState();
       toast.error("Khong the truy cap camera hoac micro.");

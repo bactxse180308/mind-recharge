@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { WEBRTC_ICE_SERVERS } from "@/lib/config";
 
 const RTC_CONFIGURATION: RTCConfiguration = {
-  iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+  iceServers: WEBRTC_ICE_SERVERS,
 };
 
 interface UseVideoCallOptions {
@@ -57,6 +58,10 @@ export function useVideoCall(options: UseVideoCallOptions = {}) {
       video: true,
       audio: true,
     });
+    console.info("[Call] Local media stream ready", {
+      audioTracks: stream.getAudioTracks().length,
+      videoTracks: stream.getVideoTracks().length,
+    });
 
     localStreamRef.current = stream;
     setLocalStream(stream);
@@ -85,17 +90,38 @@ export function useVideoCall(options: UseVideoCallOptions = {}) {
     const stream = await ensureLocalStream();
     const connection = new RTCPeerConnection(RTC_CONFIGURATION);
     const nextRemoteStream = new MediaStream();
+    console.info("[Call] Creating RTCPeerConnection", {
+      iceServers: RTC_CONFIGURATION.iceServers,
+    });
 
     remoteStreamRef.current = nextRemoteStream;
     setRemoteStream(nextRemoteStream);
 
     connection.onicecandidate = (event) => {
       if (event.candidate) {
+        console.info("[Call] ICE candidate generated", {
+          sdpMid: event.candidate.sdpMid,
+          sdpMLineIndex: event.candidate.sdpMLineIndex,
+        });
         onIceCandidateRef.current?.(event.candidate);
       }
     };
 
+    connection.onicecandidateerror = (event) => {
+      console.error("[Call] ICE candidate error", {
+        address: event.address,
+        port: event.port,
+        url: event.url,
+        errorCode: event.errorCode,
+        errorText: event.errorText,
+      });
+    };
+
     connection.ontrack = (event) => {
+      console.info("[Call] Remote track received", {
+        kind: event.track.kind,
+        streamCount: event.streams.length,
+      });
       const targetStream = remoteStreamRef.current ?? nextRemoteStream;
 
       if (event.streams[0]) {
@@ -107,7 +133,19 @@ export function useVideoCall(options: UseVideoCallOptions = {}) {
     };
 
     connection.onconnectionstatechange = () => {
+      console.info("[Call] Peer connection state", {
+        connectionState: connection.connectionState,
+        iceConnectionState: connection.iceConnectionState,
+        iceGatheringState: connection.iceGatheringState,
+        signalingState: connection.signalingState,
+      });
       onConnectionStateChangeRef.current?.(connection.connectionState);
+    };
+
+    connection.oniceconnectionstatechange = () => {
+      console.info("[Call] ICE connection state", {
+        iceConnectionState: connection.iceConnectionState,
+      });
     };
 
     stream.getTracks().forEach((track) => {
@@ -122,6 +160,7 @@ export function useVideoCall(options: UseVideoCallOptions = {}) {
     const connection = await ensurePeerConnection();
     const offer = await connection.createOffer();
     await connection.setLocalDescription(offer);
+    console.info("[Call] Local offer created");
     return connection.localDescription;
   }, [ensurePeerConnection]);
 
@@ -129,10 +168,12 @@ export function useVideoCall(options: UseVideoCallOptions = {}) {
     async (sdp: string) => {
       const connection = await ensurePeerConnection();
       await connection.setRemoteDescription({ type: "offer", sdp });
+      console.info("[Call] Remote offer applied");
       await flushPendingIceCandidates();
 
       const answer = await connection.createAnswer();
       await connection.setLocalDescription(answer);
+      console.info("[Call] Local answer created");
       return connection.localDescription;
     },
     [ensurePeerConnection, flushPendingIceCandidates]
@@ -142,6 +183,7 @@ export function useVideoCall(options: UseVideoCallOptions = {}) {
     async (sdp: string) => {
       const connection = await ensurePeerConnection();
       await connection.setRemoteDescription({ type: "answer", sdp });
+      console.info("[Call] Remote answer applied");
       await flushPendingIceCandidates();
     },
     [ensurePeerConnection, flushPendingIceCandidates]
@@ -151,11 +193,13 @@ export function useVideoCall(options: UseVideoCallOptions = {}) {
     const connection = peerConnectionRef.current;
 
     if (!connection || !connection.remoteDescription) {
+      console.info("[Call] Queueing ICE candidate until remote description is ready");
       pendingIceCandidatesRef.current.push(candidate);
       return;
     }
 
     await connection.addIceCandidate(candidate);
+    console.info("[Call] ICE candidate added");
   }, []);
 
   const cleanup = useCallback(() => {

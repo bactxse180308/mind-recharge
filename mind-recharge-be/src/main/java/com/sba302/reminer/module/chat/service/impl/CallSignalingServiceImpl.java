@@ -10,6 +10,7 @@ import com.sba302.reminer.module.chat.service.CallRealtimeNotifier;
 import com.sba302.reminer.module.chat.service.CallSignalingService;
 import com.sba302.reminer.module.user.entity.User;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -17,6 +18,7 @@ import org.springframework.util.StringUtils;
 import java.time.Instant;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -28,6 +30,8 @@ class CallSignalingServiceImpl implements CallSignalingService {
     @Override
     public void publishSignal(Long userId, CallSignalRequest request) {
         validatePayload(request);
+        log.debug("Call signal received: userId={} conversationId={} callId={} signalType={}",
+                userId, request.getConversationId(), request.getCallId(), request.getSignalType());
 
         ConversationParticipant senderParticipant = participantRepository
                 .findByConversationIdAndUserId(request.getConversationId(), userId)
@@ -56,6 +60,13 @@ class CallSignalingServiceImpl implements CallSignalingService {
 
         recipients.forEach(participant ->
                 realtimeNotifier.notifyUser(participant.getUser().getId(), event));
+
+        log.debug("Call signal forwarded: fromUserId={} toUserIds={} conversationId={} callId={} signalType={}",
+                userId,
+                recipients.stream().map(participant -> participant.getUser().getId()).toList(),
+                request.getConversationId(),
+                request.getCallId(),
+                request.getSignalType());
     }
 
     private void validatePayload(CallSignalRequest request) {
