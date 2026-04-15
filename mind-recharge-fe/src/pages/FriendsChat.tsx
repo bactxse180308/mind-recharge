@@ -7,9 +7,10 @@ import {
   type InfiniteData,
 } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, ImagePlus, LoaderCircle, Send, X } from "lucide-react";
+import { ArrowLeft, ImagePlus, LoaderCircle, Send, Video, X } from "lucide-react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useCall } from "@/contexts/CallContext";
 import ImageLightbox from "@/components/ImageLightbox";
 import type { ApiResponse } from "@/services/authApi";
 import {
@@ -61,6 +62,7 @@ const FriendsChat = () => {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const convId = Number(conversationId);
+  const { activeCall, incomingCall, startOutgoingCall } = useCall();
 
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const prependMeasurementRef = useRef<{ height: number; top: number } | null>(null);
@@ -127,6 +129,7 @@ const FriendsChat = () => {
     conversation?.counterpart?.avatarKey,
     conversation?.counterpart?.avatarUrl
   );
+  const isCallBusy = !!activeCall || !!incomingCall;
 
   const latestOwnMessage = useMemo(() => {
     for (let index = messages.length - 1; index >= 0; index -= 1) {
@@ -475,6 +478,15 @@ const FriendsChat = () => {
               {typingLabel || subtitle}
             </p>
           </div>
+          <button
+            type="button"
+            disabled={!conversation || isCallBusy}
+            onClick={() => conversation && void startOutgoingCall(conversation)}
+            className="ml-auto flex h-10 w-10 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-primary transition-all hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-40"
+            title="Goi video"
+          >
+            <Video size={18} />
+          </button>
         </div>
       </div>
 

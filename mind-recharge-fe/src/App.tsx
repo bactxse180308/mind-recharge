@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { BootstrapProvider } from "@/contexts/BootstrapContext";
+import { CallProvider } from "@/contexts/CallContext";
 import BottomNav from "@/components/BottomNav";
 import TopHeader from "@/components/TopHeader";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -136,9 +137,11 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <BootstrapProvider>
-            <TopHeader />
-            <AppRoutes />
-            <BottomNav />
+            <CallProvider>
+              <TopHeader />
+              <AppRoutes />
+              <BottomNav />
+            </CallProvider>
           </BootstrapProvider>
         </AuthProvider>
       </BrowserRouter>
