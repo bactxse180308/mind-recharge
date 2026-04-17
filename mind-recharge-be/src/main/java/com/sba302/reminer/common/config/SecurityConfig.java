@@ -56,6 +56,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/", "/error", "/api/v1/health").permitAll()
+                        // Monitoring endpoints
+                        .requestMatchers("/actuator/**").permitAll()
                         // Public auth endpoints
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login",
                                 "/api/v1/auth/refresh").permitAll()
