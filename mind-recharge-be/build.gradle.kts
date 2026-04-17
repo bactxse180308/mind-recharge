@@ -55,6 +55,10 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok-mapstruct-binding:0.2.0")
 
+    // Monitoring – Spring Boot Actuator + Micrometer Prometheus
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    runtimeOnly("io.micrometer:micrometer-registry-prometheus")
+
     // Dev tools
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 

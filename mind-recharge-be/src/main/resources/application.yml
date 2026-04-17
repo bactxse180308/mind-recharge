@@ -77,6 +77,31 @@ r2:
   bucket-name: ${R2_BUCKET_NAME}
   public-url: ${R2_PUBLIC_URL}
 
+# =============================================================================
+# Spring Boot Actuator – Monitoring endpoints cho Prometheus
+# =============================================================================
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        # Chỉ expose các endpoint cần thiết, KHÔNG expose env/beans/heapdump
+        include: health, info, prometheus, metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+    prometheus:
+      enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  # Tag chung cho tất cả metrics
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      environment: ${APP_ENV:development}
+
 logging:
   level:
     root: INFO
