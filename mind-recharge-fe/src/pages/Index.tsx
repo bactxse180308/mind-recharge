@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { homeApi, checkinApi, type CheckinRequest } from "@/services/homeApi";
 import { useBootstrap } from "@/contexts/BootstrapContext";
 import { HealingTimeline } from "@/components/HealingTimeline";
+import FriendsWidget from "@/components/FriendsWidget";
 import { toast } from "sonner";
 
 const MOOD_MAP = [
@@ -138,6 +139,8 @@ const Index = () => {
         <div className="w-full mt-12 text-left">
            <HealingTimeline />
         </div>
+
+        <FriendsWidget />
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -19,6 +20,8 @@ public interface NoContactJourneyRepository
                 JpaSpecificationExecutor<NoContactJourney> {
 
     Optional<NoContactJourney> findByUserIdAndStatus(Long userId, JourneyStatus status);
+
+    List<NoContactJourney> findAllByUserId(Long userId);
 
     @Query("select j.startedAt from NoContactJourney j where j.user.id = :userId and j.status = :status")
     Optional<Instant> findStartedAtByUserIdAndStatus(@Param("userId") Long userId, @Param("status") JourneyStatus status);

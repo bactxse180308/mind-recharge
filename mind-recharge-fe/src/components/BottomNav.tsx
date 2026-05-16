@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, BookOpen, MessageCircle, Compass, Heart, User } from "lucide-react";
+import { Home, BookOpen, MessageCircle, Compass, Heart, User, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
@@ -7,6 +7,7 @@ const tabs = [
   { path: "/", icon: Home, label: "Trang chủ" },
   { path: "/journal", icon: BookOpen, label: "Nhật ký" },
   { path: "/unsent", icon: MessageCircle, label: "Chưa gửi" },
+  { path: "/friends", icon: Users, label: "Bạn bè" },
   { path: "/tracker", icon: Compass, label: "Hành trình" },
   { path: "/tasks", icon: Heart, label: "Điều nhỏ" },
   { path: "/profile", icon: User, label: "Hồ sơ" },
@@ -33,13 +34,13 @@ const BottomNav = () => {
       <div className="w-full max-w-[480px] border-t border-border/20 bg-card/70 backdrop-blur-2xl px-2 pb-safe">
         <div className="flex justify-around py-2">
           {tabs.map(({ path, icon: Icon, label }) => {
-            const active = location.pathname === path;
+            const active = path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
             return (
               <button
                 key={path}
                 id={`nav-${label.toLowerCase().replace(/\s+/g, "-")}`}
                 onClick={() => navigate(path)}
-                className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-300 btn-press ${
+                className={`flex flex-col items-center gap-0.5 px-1.5 py-1.5 rounded-xl transition-all duration-300 btn-press ${
                   active
                     ? "text-primary nav-glow"
                     : "text-muted-foreground/40 hover:text-muted-foreground/70"

@@ -4,8 +4,11 @@ import com.sba302.reminer.common.response.ApiResponse;
 import com.sba302.reminer.common.response.PageMeta;
 import com.sba302.reminer.common.security.CustomUserPrincipal;
 import com.sba302.reminer.common.util.SecurityUtils;
+import com.sba302.reminer.module.nocontact.dto.request.CreateDailyLogRequest;
 import com.sba302.reminer.module.nocontact.dto.request.ResetJourneyRequest;
+import com.sba302.reminer.module.nocontact.dto.response.DailyLogResponse;
 import com.sba302.reminer.module.nocontact.dto.response.NoContactJourneyResponse;
+import com.sba302.reminer.module.nocontact.dto.response.NoContactStatsResponse;
 import com.sba302.reminer.module.nocontact.service.NoContactService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -61,6 +64,29 @@ public class NoContactController {
         Long userId = SecurityUtils.getCurrentUserId();
         Page<NoContactJourneyResponse> result = noContactService.history(
                 userId, PageRequest.of(page, size, Sort.by("startedAt").descending()));
+        return ApiResponse.ok(result.getContent(), PageMeta.of(result));
+    }
+
+    @GetMapping("/stats")
+    @Operation(summary = "Get stats: longest streak and total resets")
+    public ApiResponse<NoContactStatsResponse> getStats() {
+        return ApiResponse.ok(noContactService.getStats(SecurityUtils.getCurrentUserId()));
+    }
+
+    @PostMapping("/daily-logs")
+    @Operation(summary = "Create or update today's daily log for the active journey")
+    public ApiResponse<DailyLogResponse> upsertDailyLog(@RequestBody CreateDailyLogRequest request) {
+        return ApiResponse.ok(noContactService.upsertDailyLog(SecurityUtils.getCurrentUserId(), request));
+    }
+
+    @GetMapping("/daily-logs")
+    @Operation(summary = "Get daily logs for the active journey")
+    public ApiResponse<List<DailyLogResponse>> getDailyLogs(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        Page<DailyLogResponse> result = noContactService.getDailyLogs(
+                userId, PageRequest.of(page, size));
         return ApiResponse.ok(result.getContent(), PageMeta.of(result));
     }
 
