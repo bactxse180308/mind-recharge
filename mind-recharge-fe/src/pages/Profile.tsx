@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { userApi } from "@/services/userApi";
 import { imageApi } from "@/services/imageApi";
+import { friendApi } from "@/services/friendApi";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ImageLightbox from "@/components/ImageLightbox";
 import {
@@ -15,10 +16,6 @@ import {
   getCoverMetrics,
   loadImage,
 } from "@/lib/avatarCrop";
-
-// TODO: replace with real API data
-const mockFriendCount = 3;
-const mockRequestCount = 1;
 
 const Profile = () => {
   const { user, logout } = useAuth();
@@ -48,6 +45,19 @@ const Profile = () => {
     queryKey: ["user-profile"],
     queryFn: () => userApi.getMe(),
   });
+
+  const { data: friendsData } = useQuery({
+    queryKey: ["friends-list", 0, 1],
+    queryFn: () => friendApi.listFriends(0, 1),
+  });
+
+  const { data: incomingData } = useQuery({
+    queryKey: ["friends-incoming", 0, 1],
+    queryFn: () => friendApi.listIncomingRequests(0, 1),
+  });
+
+  const friendCount = (friendsData as any)?.meta?.totalElements ?? 0;
+  const requestCount = (incomingData as any)?.meta?.totalElements ?? 0;
 
   const profile = data?.data as any;
   const avatarSrc = imageApi.buildViewUrl(
@@ -427,7 +437,7 @@ const Profile = () => {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-foreground">Bạn bè</p>
             <p className="text-xs text-muted-foreground/60 mt-0.5">
-              {mockFriendCount} bạn bè · {mockRequestCount} lời mời
+              {friendCount} bạn bè · {requestCount} lời mời
             </p>
           </div>
           <ChevronRight size={16} className="text-muted-foreground/40 flex-shrink-0" />

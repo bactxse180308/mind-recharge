@@ -32,7 +32,14 @@ const UnsentMessages = () => {
   const [pin, setPin] = useState("");
   const [shake, setShake] = useState(false);
   const [sessionMsg, setSessionMsg] = useState("");
+  const [lockoutSeconds, setLockoutSeconds] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (lockoutSeconds <= 0) return;
+    const t = setInterval(() => setLockoutSeconds((s) => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(t);
+  }, [lockoutSeconds > 0]);
 
   useEffect(() => {
     if (viewMode === "GUARD" && guardSecs > 0) {
@@ -61,7 +68,8 @@ const UnsentMessages = () => {
       SecuritySessionManager.clear();
       setUnlockToken("");
       setViewMode("LOCKED");
-      setSessionMsg("Bạn cần nhập lại mật khẩu để tiếp tục.");
+      setSessionMsg("Phiên xem đã hết hạn. Vui lòng nhập lại mật khẩu để tiếp tục.");
+      toast.info("Phiên xem đã hết hạn 🔒");
     }
   }, [isError, error]);
 
@@ -74,7 +82,8 @@ const UnsentMessages = () => {
         SecuritySessionManager.clear();
         setUnlockToken("");
         setViewMode("LOCKED");
-        setSessionMsg("Đã qua lâu rồi. Bạn cần nhập lại mật khẩu để tiếp tục.");
+        setSessionMsg("Phiên xem đã hết hạn. Vui lòng nhập lại mật khẩu để tiếp tục.");
+        toast.info("Phiên xem đã hết hạn 🔒");
       }
     };
     document.addEventListener("visibilitychange", visibilityChange);
@@ -131,9 +140,15 @@ const UnsentMessages = () => {
       setViewMode("TRANSITION");
       setTimeout(() => setViewMode("UNLOCKED"), 1500);
     },
-    onError: () => {
-      setShake(true);
-      setTimeout(() => setShake(false), 600);
+    onError: (err: any) => {
+      const lockedSecs = err?.details?.lockedUntilSeconds;
+      if (lockedSecs) {
+        setLockoutSeconds(Number(lockedSecs));
+        setSessionMsg("");
+      } else {
+        setShake(true);
+        setTimeout(() => setShake(false), 600);
+      }
       setPin("");
       inputRef.current?.focus();
     },
@@ -151,6 +166,11 @@ const UnsentMessages = () => {
   const handleImageSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Ảnh quá lớn. Vui lòng chọn ảnh dưới 10MB.");
+      e.target.value = "";
+      return;
+    }
     uploadUnsentImage(file);
     e.target.value = "";
   };
@@ -266,11 +286,15 @@ const UnsentMessages = () => {
               </div>
 
               <div className="h-6 mt-4">
-                {shake && (
+                {lockoutSeconds > 0 ? (
+                  <p className="text-sm text-rose-400/80 float-up italic">
+                    Thử lại sau {Math.floor(lockoutSeconds / 60)}:{String(lockoutSeconds % 60).padStart(2, "0")}
+                  </p>
+                ) : shake ? (
                   <p className="text-sm text-primary/80 float-up italic">
                     Mật khẩu chưa đúng, thử lại nhé
                   </p>
-                )}
+                ) : null}
               </div>
 
               <input
@@ -282,6 +306,7 @@ const UnsentMessages = () => {
                 maxLength={4}
                 value={pin}
                 onChange={(e) => {
+                  if (lockoutSeconds > 0) return;
                   const v = e.target.value.replace(/\D/g, "").slice(0, 4);
                   setPin(v);
                   if (v.length === 4 && !isUnlocking) unlock(v);

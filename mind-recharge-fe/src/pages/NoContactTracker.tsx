@@ -155,7 +155,7 @@ const NoContactTracker = () => {
                   cy="100"
                   r={radius}
                   fill="none"
-                  stroke="hsl(230 15% 20%)"
+                  stroke="hsl(var(--border))"
                   strokeWidth="4"
                 />
                 <circle
@@ -163,7 +163,7 @@ const NoContactTracker = () => {
                   cy="100"
                   r={radius}
                   fill="none"
-                  stroke="hsl(260 40% 65%)"
+                  stroke="hsl(var(--primary))"
                   strokeWidth="4"
                   strokeLinecap="round"
                   strokeDasharray={circumference}
@@ -295,6 +295,12 @@ const NoContactTracker = () => {
               </button>
             ) : (
               <div className="healing-card p-4 float-up space-y-3">
+                <p className="text-sm font-medium text-rose-400/80">Đặt lại hành trình?</p>
+                <p className="text-xs text-muted-foreground/60 leading-relaxed">
+                  {days > 0
+                    ? `${days} ngày của bạn sẽ về 0. Bắt đầu lại không phải thất bại, nhưng hãy chắc chắn bạn muốn điều này.`
+                    : "Hành trình sẽ được đặt lại. Bắt đầu lại không phải thất bại."}
+                </p>
                 <p className="text-xs text-muted-foreground">Lý do (tuỳ chọn):</p>
                 <input
                   value={resetInput}
@@ -312,7 +318,7 @@ const NoContactTracker = () => {
                     {isResetting ? "Đang đặt lại..." : "Xác nhận đặt lại"}
                   </button>
                   <button
-                    onClick={() => setShowResetConfirm(false)}
+                    onClick={() => { setShowResetConfirm(false); setResetInput(""); }}
                     className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors"
                   >
                     Huỷ

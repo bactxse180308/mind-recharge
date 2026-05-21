@@ -328,7 +328,7 @@ const DailyTasks = () => {
                       }`}
                     >
                       <div
-                        className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border transition-all duration-300 ${
+                        className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border transition-all duration-300 ${
                           isDone
                             ? "border-primary/35 bg-primary/18"
                             : isNext
@@ -337,13 +337,13 @@ const DailyTasks = () => {
                         }`}
                       >
                         <div
-                          className={`flex h-7 w-7 items-center justify-center rounded-full border transition-all duration-300 ${
+                          className={`flex h-5 w-5 items-center justify-center rounded-full border transition-all duration-300 ${
                             isDone
                               ? "scale-110 border-primary/50 bg-primary/20 text-primary"
                               : "border-border/50 bg-transparent text-transparent"
                           }`}
                         >
-                          <Check size={15} className={isDone ? "animate-in zoom-in-75 duration-200" : ""} />
+                          <Check size={11} className={isDone ? "animate-in zoom-in-75 duration-200" : ""} />
                         </div>
                       </div>
 

@@ -22,7 +22,7 @@ public class GlobalExceptionHandler {
         log.warn("AppException [{}] {}", ex.getCode(), ex.getMessage());
         return ResponseEntity
                 .status(ex.getStatus())
-                .body(ErrorResponse.of(ex.getCode(), ex.getMessage()));
+                .body(ErrorResponse.of(ex.getCode(), ex.getMessage(), ex.getDetails()));
     }
 
     @ExceptionHandler(BadRequestException.class)

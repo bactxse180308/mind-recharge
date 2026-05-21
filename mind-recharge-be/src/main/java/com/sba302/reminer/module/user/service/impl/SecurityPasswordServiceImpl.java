@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -95,7 +96,11 @@ class SecurityPasswordServiceImpl implements SecurityPasswordService {
     private void checkAndClearLock(User user) {
         if (user.getSecurityPasswordLockedUntil() != null) {
             if (Instant.now().isBefore(user.getSecurityPasswordLockedUntil())) {
-                throw AppException.forbidden("Too many failed attempts. Try again later.");
+                long secondsRemaining = ChronoUnit.SECONDS.between(Instant.now(), user.getSecurityPasswordLockedUntil());
+                throw AppException.forbidden(
+                    "Too many failed attempts. Try again later.",
+                    Map.of("lockedUntilSeconds", secondsRemaining)
+                );
             } else {
                 // Lock expired -> reset lock
                 user.setSecurityPasswordLockedUntil(null);

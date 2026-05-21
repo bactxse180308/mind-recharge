@@ -4,7 +4,55 @@
 @tailwind components;
 @tailwind utilities;
 @layer base {
+  /* ── Light theme (default) ── */
   :root {
+    --background: 250 35% 97%;
+    --foreground: 240 25% 18%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 25% 18%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 25% 18%;
+
+    --primary: 260 50% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 260 20% 93%;
+    --secondary-foreground: 240 20% 30%;
+
+    --muted: 240 15% 94%;
+    --muted-foreground: 240 12% 50%;
+
+    --accent: 260 35% 91%;
+    --accent-foreground: 260 45% 40%;
+
+    --destructive: 0 60% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 15% 88%;
+    --input: 240 15% 91%;
+    --ring: 260 50% 55%;
+
+    --radius: 1rem;
+
+    --sidebar-background: 250 35% 97%;
+    --sidebar-foreground: 240 25% 18%;
+    --sidebar-primary: 260 50% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 260 20% 93%;
+    --sidebar-accent-foreground: 240 20% 30%;
+    --sidebar-border: 240 15% 88%;
+    --sidebar-ring: 260 50% 55%;
+
+    --healing-glow: 260 55% 60%;
+    --healing-warm: 30 40% 58%;
+    --healing-soft: 260 25% 65%;
+    --healing-success: 160 35% 45%;
+  }
+
+  /* ── Dark theme ── */
+  .dark {
     --background: 230 25% 10%;
     --foreground: 220 20% 88%;
 
@@ -32,8 +80,6 @@
     --border: 230 15% 20%;
     --input: 230 15% 22%;
     --ring: 260 40% 65%;
-
-    --radius: 1rem;
 
     --sidebar-background: 230 25% 10%;
     --sidebar-foreground: 220 20% 88%;
@@ -64,9 +110,13 @@
 
 @layer utilities {
   .healing-gradient-bg {
-    background: linear-gradient(160deg, hsl(260 30% 13%), hsl(230 25% 10%), hsl(250 20% 8%));
+    background: linear-gradient(160deg, hsl(258 40% 96%), hsl(240 30% 98%), hsl(270 35% 96%));
     animation: gradientShift 20s ease-in-out infinite alternate;
     background-size: 200% 200%;
+  }
+
+  .dark .healing-gradient-bg {
+    background: linear-gradient(160deg, hsl(260 30% 13%), hsl(230 25% 10%), hsl(250 20% 8%));
   }
 
   .healing-card {
@@ -80,7 +130,7 @@
   }
 
   .healing-glow {
-    box-shadow: 0 0 40px -10px hsl(260 60% 70% / 0.15);
+    box-shadow: 0 0 40px -10px hsl(var(--healing-glow) / 0.2);
   }
 
   .breathing {
@@ -112,12 +162,12 @@
   }
 
   .glow-cursor {
-    caret-color: hsl(260 60% 70%);
+    caret-color: hsl(var(--healing-glow));
     text-shadow: 0 0 0 transparent;
   }
 
   .glow-cursor:focus {
-    text-shadow: 0 0 20px hsl(260 60% 70% / 0.08);
+    text-shadow: 0 0 20px hsl(var(--healing-glow) / 0.08);
   }
 
   .task-complete {
@@ -125,8 +175,8 @@
   }
 
   .nav-glow {
-    text-shadow: 0 0 12px hsl(260 60% 70% / 0.4);
-    filter: drop-shadow(0 0 6px hsl(260 60% 70% / 0.2));
+    text-shadow: 0 0 12px hsl(var(--healing-glow) / 0.4);
+    filter: drop-shadow(0 0 6px hsl(var(--healing-glow) / 0.2));
   }
 }
 
@@ -177,7 +227,7 @@
   from { stroke-dashoffset: 283; }
 }
 
-/* Smooth scrollbar */
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 4px;
 }
@@ -185,8 +235,11 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(260 20% 30%);
+  background: hsl(260 20% 75%);
   border-radius: 999px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: hsl(260 20% 30%);
 }
 
 /* Safe area padding for mobile */
