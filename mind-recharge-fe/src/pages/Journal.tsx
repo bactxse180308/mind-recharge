@@ -134,15 +134,22 @@ const Journal = () => {
           <textarea
             value={text}
             onChange={(e) => {
+              if (e.target.value.length > 10000) return;
               setText(e.target.value);
               if (!isWriting) setIsWriting(true);
             }}
             onBlur={() => !text && setIsWriting(false)}
             placeholder="Hôm nay bạn muốn nói gì?"
+            maxLength={10000}
             className={`w-full bg-transparent resize-none text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none glow-cursor transition-all duration-700 leading-relaxed ${
               isWriting ? "h-36" : "h-16"
             }`}
           />
+          {isWriting && text.length > 8000 && (
+            <p className={`text-[10px] mt-1 text-right ${text.length >= 10000 ? "text-rose-400/70" : "text-muted-foreground/40"}`}>
+              {text.length}/10000
+            </p>
+          )}
           <div className="flex items-center justify-between mt-3">
             <div className="flex gap-2">
               {MOOD_OPTIONS.map(({ code, emoji }) => (

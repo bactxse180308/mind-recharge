@@ -15,26 +15,32 @@ const EmotionalTrigger = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState<TriggerSessionResponse | null>(null);
   const [seconds, setSeconds] = useState(600);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startTimeRef = useRef<number | null>(null);
+  const totalDurationRef = useRef<number>(600);
+  const rafRef = useRef<number | null>(null);
 
   const isRunning = session?.status === "RUNNING";
 
-  // Countdown
+  // Countdown using requestAnimationFrame + Date.now() to avoid drift
   useEffect(() => {
     if (!isRunning) {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
       return;
     }
-    intervalRef.current = setInterval(() => {
-      setSeconds((s) => {
-        if (s <= 1) {
-          clearInterval(intervalRef.current!);
-          return 0;
-        }
-        return s - 1;
-      });
-    }, 1000);
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+
+    startTimeRef.current = Date.now();
+
+    const tick = () => {
+      const elapsed = Math.floor((Date.now() - startTimeRef.current!) / 1000);
+      const remaining = Math.max(0, totalDurationRef.current - elapsed);
+      setSeconds(remaining);
+      if (remaining > 0) {
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
   }, [isRunning]);
 
   const formatTime = (s: number) =>
@@ -44,8 +50,10 @@ const EmotionalTrigger = () => {
   const { mutate: startSession, isPending: isStarting } = useMutation({
     mutationFn: () => emotionalTriggerApi.startSession(),
     onSuccess: (res) => {
+      const duration = res.data.durationSeconds ?? 600;
+      totalDurationRef.current = duration;
+      setSeconds(duration);
       setSession(res.data);
-      setSeconds(res.data.durationSeconds ?? 600);
     },
     onError: () => toast.error("Không thể bắt đầu phiên, thử lại nhé"),
   });
@@ -94,7 +102,7 @@ const EmotionalTrigger = () => {
   // Circle SVG for countdown
   const radius = 60;
   const circumference = 2 * Math.PI * radius;
-  const totalDuration = session?.durationSeconds ?? 600;
+  const totalDuration = totalDurationRef.current;
   const progress = seconds / totalDuration;
   const strokeOffset = circumference - progress * circumference;
 

@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell } from "lucide-react";
+import { Bell, Sun, Moon } from "lucide-react";
+import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { createRealtimeClient } from "@/lib/chatRealtime";
@@ -59,6 +60,8 @@ const TopHeader = () => {
     };
   }, [isAuthenticated, qc]);
 
+  const { resolvedTheme, setTheme } = useTheme();
+
   const profile = profileResponse?.data;
   const unreadCount = unreadCountResponse?.data?.unreadCount ?? 0;
   const avatarSrc = imageApi.buildViewUrl(profile?.avatarKey, profile?.avatarUrl);
@@ -74,12 +77,12 @@ const TopHeader = () => {
     <header className="pointer-events-none fixed left-0 right-0 top-0 z-50 flex justify-center fade-in-slow">
       <div className="flex w-full max-w-[480px] items-center justify-between bg-gradient-to-b from-background/80 to-transparent px-6 pb-4 pt-safe">
         <div className="pointer-events-auto mt-1 flex items-center gap-2.5">
-          <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-[14px] bg-gradient-to-br from-primary/50 to-primary/10 p-[1px] shadow-[0_0_15px_rgba(167,139,250,0.15)]">
-            <div className="absolute inset-0 bg-background/60 backdrop-blur-md" />
+          <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-[14px] bg-gradient-to-br from-primary/60 to-primary/20 p-[1px] shadow-[0_0_20px_rgba(167,139,250,0.35)] dark:shadow-[0_0_15px_rgba(167,139,250,0.15)]">
+            <div className="absolute inset-0 bg-background/15 dark:bg-background/60 backdrop-blur-md" />
             <img
               src="/logo.png"
               alt="Mind Recharge"
-              className="relative h-full w-full rounded-[13px] object-cover"
+              className="relative h-full w-full rounded-[13px] object-cover brightness-110 dark:brightness-100 saturate-110 dark:saturate-100"
             />
           </div>
 
@@ -95,6 +98,14 @@ const TopHeader = () => {
         </div>
 
         <div className="pointer-events-auto mt-1 flex items-center gap-2">
+          <button
+            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border/20 bg-secondary/30 text-muted-foreground transition-all btn-press hover:bg-secondary/60 hover:text-foreground"
+            aria-label="Đổi giao diện"
+          >
+            {resolvedTheme === "dark" ? <Sun size={17} strokeWidth={2} /> : <Moon size={17} strokeWidth={2} />}
+          </button>
+
           <Avatar className="h-10 w-10 border border-border/20 shadow-[0_0_16px_rgba(255,255,255,0.05)]">
             <AvatarImage
               src={avatarSrc}

@@ -8,11 +8,17 @@ public class AppException extends RuntimeException {
 
     private final HttpStatus status;
     private final String code;
+    private final Object details;
 
     public AppException(HttpStatus status, String code, String message) {
+        this(status, code, message, null);
+    }
+
+    public AppException(HttpStatus status, String code, String message, Object details) {
         super(message);
         this.status = status;
         this.code = code;
+        this.details = details;
     }
 
     // ── Common static factories ────────────────────────────────────────────────
@@ -31,6 +37,10 @@ public class AppException extends RuntimeException {
 
     public static AppException forbidden(String message) {
         return new AppException(HttpStatus.FORBIDDEN, "FORBIDDEN", message);
+    }
+
+    public static AppException forbidden(String message, Object details) {
+        return new AppException(HttpStatus.FORBIDDEN, "FORBIDDEN", message, details);
     }
 
     public static AppException unauthorized(String message) {

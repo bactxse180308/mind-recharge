@@ -41,7 +41,7 @@ const TrendIcon = ({ trend }: { trend: HealingTrend }) => {
 };
 
 export const HealingTimeline = () => {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["healing-timeline"],
     queryFn: () => healingApi.getTimeline(),
   });
@@ -50,6 +50,16 @@ export const HealingTimeline = () => {
     return (
       <div className="w-full h-[350px] flex items-center justify-center healing-card mb-6">
         <div className="w-8 h-8 rounded-full bg-primary/20 breathing" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="w-full healing-card p-6 mb-6 flex flex-col items-center justify-center gap-2">
+        <p className="text-sm text-muted-foreground/50 italic text-center">
+          Không thể tải bản đồ cảm xúc. Thử lại sau nhé.
+        </p>
       </div>
     );
   }

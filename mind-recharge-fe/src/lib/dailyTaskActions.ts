@@ -4,15 +4,18 @@ export interface DailyTaskAction {
 }
 
 const DAILY_TASK_ACTIONS: Record<string, DailyTaskAction> = {
-  WRITE_JOURNAL: {
-    label: "Viết",
+  // Map với mã GRAT_JOURNAL trong Database
+  GRAT_JOURNAL: {
+    label: "Viết ngay",
     path: "/journal",
   },
-  DEEP_BREATH: {
-    label: "Thở ngay",
-    path: "/trigger",
+  // Map với mã MEDITATION trong Database
+  MEDITATION: {
+    label: "Thiền ngay",
+    path: "/trigger", 
   },
-  LISTEN_MUSIC: {
+  // Map với mã LISTEN_PODCAST trong Database
+  LISTEN_PODCAST: {
     label: "Mở ngay",
     path: "/trigger",
   },
@@ -20,5 +23,8 @@ const DAILY_TASK_ACTIONS: Record<string, DailyTaskAction> = {
 
 export const getDailyTaskAction = (
   taskCode: string
-): DailyTaskAction | null => DAILY_TASK_ACTIONS[taskCode] ?? null;
+): DailyTaskAction | null => {
+  if (!taskCode) return null;
+  return DAILY_TASK_ACTIONS[taskCode.trim()] ?? null;
+};
 
