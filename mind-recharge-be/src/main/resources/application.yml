@@ -69,6 +69,38 @@ app:
     full-name: ${ADMIN_FULL_NAME}
     phone: ${ADMIN_PHONE}
     address: ${ADMIN_ADDRESS}
+  sentiment:
+    negative-keywords:
+      - "buồn"
+      - "cô đơn"
+      - "nhớ"
+      - "chán"
+      - "tệ"
+      - "tức giận"
+      - "tuyệt vọng"
+      - "đau"
+      - "khóc"
+      - "mệt mỏi"
+      - "thất vọng"
+      - "cô đơn quá"
+      - "không ổn"
+      - "sợ"
+      - "lo lắng"
+    positive-keywords:
+      - "ổn"
+      - "tốt"
+      - "vui"
+      - "đỡ hơn"
+      - "hạnh phúc"
+      - "tuyệt vời"
+      - "tự hào"
+      - "biết ơn"
+      - "bình yên"
+      - "hy vọng"
+      - "phấn khởi"
+      - "nhẹ nhõm"
+      - "tích cực"
+      - "yêu đời"
 
 r2:
   endpoint: ${R2_ENDPOINT}

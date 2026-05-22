@@ -81,7 +81,7 @@ class HealingServiceImpl implements HealingService {
             // Sync progress after capturing today's mood
             updateProgress(user.getId(), recordDate);
         } catch (Exception e) {
-            log.error("Failed to process JournalSavedEvent for user {}: {}", event.getUserId(), e.getMessage());
+            log.error("Failed to process JournalSavedEvent for user {}", event.getUserId(), e);
         }
     }
 
