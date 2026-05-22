@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { emotionalTriggerApi, type TriggerSessionResponse } from "@/services/emotionalTriggerApi";
 import { toast } from "sonner";
+import { BreathingGuide } from "@/components/BreathingGuide";
 
 const defaultReminders = [
   "Bạn đang muốn quay lại một nơi từng làm bạn tổn thương",
@@ -171,8 +172,8 @@ const EmotionalTrigger = () => {
           </>
         ) : (
           <div className="fade-in-slow">
-            {/* Circle countdown */}
-            <div className="relative mx-auto w-40 h-40 mb-8">
+            {/* Compact circle countdown */}
+            <div className="relative mx-auto w-24 h-24 mb-6">
               <svg className="w-full h-full -rotate-90" viewBox="0 0 160 160">
                 <circle cx="80" cy="80" r={radius} fill="none" stroke="hsl(230 15% 15%)" strokeWidth="3" />
                 <circle
@@ -189,18 +190,17 @@ const EmotionalTrigger = () => {
                   style={{ filter: "drop-shadow(0 0 10px hsl(260 60% 70% / 0.3))" }}
                 />
               </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center breathing">
-                <span className="text-3xl font-light text-foreground">
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-xl font-light text-foreground/70">
                   {formatTime(seconds)}
                 </span>
               </div>
             </div>
 
-            <h2 className="text-lg font-light text-foreground mb-2">Hít thở sâu</h2>
-            <p className="text-sm text-muted-foreground/60 mb-4 leading-relaxed">
-              Cảm xúc này sẽ qua. Bạn đang làm rất tốt.
-            </p>
-            <p className="text-xs text-muted-foreground/30 italic mb-8">
+            {/* Breathing guide */}
+            <BreathingGuide />
+
+            <p className="text-[10px] text-white/20 italic mt-6 mb-8">
               "Bạn không yếu, bạn chỉ đang cảm nhận"
             </p>
 
