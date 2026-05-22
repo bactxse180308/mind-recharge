@@ -1,20 +1,15 @@
 package com.sba302.reminer.module.healing.service.impl;
 
+import com.sba302.reminer.common.config.SentimentConfigProperties;
 import com.sba302.reminer.module.healing.service.SentimentService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
+@RequiredArgsConstructor
 class RuleBasedSentimentServiceImpl implements SentimentService {
 
-    private static final List<String> NEGATIVE_KEYWORDS = List.of(
-            "buồn", "cô đơn", "nhớ", "chán", "tệ", "tức giận", "tuyệt vọng", "đau", "khóc"
-    );
-
-    private static final List<String> POSITIVE_KEYWORDS = List.of(
-            "ổn", "tốt", "vui", "đỡ hơn", "hạnh phúc", "tuyệt vời", "tự hào", "biết ơn"
-    );
+    private final SentimentConfigProperties config;
 
     @Override
     public int analyze(String text) {
@@ -24,8 +19,8 @@ class RuleBasedSentimentServiceImpl implements SentimentService {
 
         String lowerText = text.toLowerCase();
 
-        boolean hasNegative = NEGATIVE_KEYWORDS.stream().anyMatch(lowerText::contains);
-        boolean hasPositive = POSITIVE_KEYWORDS.stream().anyMatch(lowerText::contains);
+        boolean hasNegative = config.getNegativeKeywords().stream().anyMatch(lowerText::contains);
+        boolean hasPositive = config.getPositiveKeywords().stream().anyMatch(lowerText::contains);
 
         if (hasNegative && !hasPositive) {
             return -1;

@@ -72,27 +72,26 @@ class JournalServiceImpl implements JournalService {
 
     @Override
     public JournalResponse getById(Long userId, Long id) {
-        return journalRepo.findAll(
+        return journalRepo.findOne(
                 JournalEntrySpecification.activeForUser(userId)
                         .and((root, q, cb) -> cb.equal(root.get("id"), id))
-        ).stream().findFirst().map(this::toResponse)
+        ).map(this::toResponse)
                 .orElseThrow(() -> AppException.notFound("Journal entry not found"));
     }
 
     @Override
     @Transactional
     public JournalResponse update(Long userId, Long id, UpdateJournalRequest request) {
-        JournalEntry entry = journalRepo.findAll(
+        JournalEntry entry = journalRepo.findOne(
                 JournalEntrySpecification.activeForUser(userId)
                         .and((root, q, cb) -> cb.equal(root.get("id"), id))
-        ).stream().findFirst()
-                .orElseThrow(() -> AppException.notFound("Journal entry not found"));
+        ).orElseThrow(() -> AppException.notFound("Journal entry not found"));
 
         if (request.getMoodCode() != null) entry.setMoodCode(request.getMoodCode());
         if (StringUtils.hasText(request.getContent())) entry.setContent(request.getContent());
 
         journalRepo.save(entry);
-        
+
         eventPublisher.publishEvent(com.sba302.reminer.common.event.JournalSavedEvent.builder()
                 .journalEntryId(entry.getId())
                 .userId(userId)
@@ -109,11 +108,10 @@ class JournalServiceImpl implements JournalService {
     @Override
     @Transactional
     public void delete(Long userId, Long id) {
-        JournalEntry entry = journalRepo.findAll(
+        JournalEntry entry = journalRepo.findOne(
                 JournalEntrySpecification.activeForUser(userId)
                         .and((root, q, cb) -> cb.equal(root.get("id"), id))
-        ).stream().findFirst()
-                .orElseThrow(() -> AppException.notFound("Journal entry not found"));
+        ).orElseThrow(() -> AppException.notFound("Journal entry not found"));
 
         entry.setDeletedAt(Instant.now());
         journalRepo.save(entry);
