@@ -1,8 +1,30 @@
+buildscript {
+    dependencies {
+        classpath("org.flywaydb:flyway-sqlserver:11.14.1")
+        classpath("com.microsoft.sqlserver:mssql-jdbc:11.2.0.jre8")
+    }
+}
+
 plugins {
     java
     id("org.springframework.boot") version "4.0.5"
     id("io.spring.dependency-management") version "1.1.7"
+    id("org.flywaydb.flyway") version "11.14.1"
 }
+
+// Load .env file for Flyway CLI tasks
+val envFile = file(".env")
+if (envFile.exists()) {
+    envFile.readLines()
+        .filter { it.isNotBlank() && !it.startsWith("#") && it.contains("=") }
+        .forEach { line ->
+            val (key, value) = line.split("=", limit = 2)
+            System.setProperty(key.trim(), value.trim())
+        }
+}
+
+fun envOrProp(vararg keys: String): String =
+    keys.firstNotNullOfOrNull { System.getenv(it) ?: System.getProperty(it) } ?: ""
 
 group = "com.sba302"
 version = "0.0.1-SNAPSHOT"
@@ -70,6 +92,17 @@ dependencies {
     testCompileOnly("org.projectlombok:lombok")
     testAnnotationProcessor("org.projectlombok:lombok")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+flyway {
+    url = envOrProp("SPRING_DATASOURCE_URL", "DB_URL")
+    user = envOrProp("SPRING_DATASOURCE_USERNAME", "DB_USER")
+    password = envOrProp("SPRING_DATASOURCE_PASSWORD", "DB_PASS")
+    locations = arrayOf("filesystem:src/main/resources/db/migration")
+    baselineOnMigrate = true
+    outOfOrder = true
+    validateOnMigrate = false
+    configurations = arrayOf("runtimeClasspath")
 }
 
 tasks.withType<Test> {

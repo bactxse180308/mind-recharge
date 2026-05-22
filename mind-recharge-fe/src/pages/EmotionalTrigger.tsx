@@ -200,7 +200,7 @@ const EmotionalTrigger = () => {
             {/* Breathing guide */}
             <BreathingGuide />
 
-            <p className="text-[10px] text-white/20 italic mt-6 mb-8">
+            <p className="text-[11px] text-white/45 italic mt-6 mb-8">
               "Bạn không yếu, bạn chỉ đang cảm nhận"
             </p>
 

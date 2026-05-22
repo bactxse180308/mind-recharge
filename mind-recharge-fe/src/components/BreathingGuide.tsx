@@ -93,8 +93,8 @@ export const BreathingGuide = () => {
             onClick={() => setTechIdx(i)}
             className={`text-[11px] px-3 py-1.5 rounded-full border transition-all duration-300 ${
               techIdx === i
-                ? "bg-primary/20 text-primary border-primary/30 font-medium"
-                : "border-white/10 text-white/30 hover:text-white/60"
+                ? "bg-primary/30 text-primary border-primary/60 font-medium"
+                : "border-white/25 text-white/55 hover:text-white/80 hover:border-white/40"
             }`}
           >
             {t.name}
@@ -109,12 +109,12 @@ export const BreathingGuide = () => {
       >
         {/* Outermost glow ring */}
         <div
-          className="absolute inset-0 rounded-full border border-primary/15"
+          className="absolute inset-0 rounded-full border-2 border-primary/40"
           style={{ transform: circleTransform, transition: circleTransition }}
         />
         {/* Mid ring */}
         <div
-          className="absolute rounded-full bg-primary/[0.06]"
+          className="absolute rounded-full bg-primary/15"
           style={{
             width: "80%", height: "80%",
             transform: circleTransform,
@@ -123,7 +123,7 @@ export const BreathingGuide = () => {
         />
         {/* Inner filled circle */}
         <div
-          className="absolute rounded-full bg-primary/[0.12] border border-primary/25"
+          className="absolute rounded-full bg-primary/30 border border-primary/50"
           style={{
             width: "60%", height: "60%",
             transform: circleTransform,
@@ -133,13 +133,13 @@ export const BreathingGuide = () => {
 
         {/* Center content */}
         <div className="relative z-10 text-center select-none">
-          <p className="text-3xl font-light text-primary/90">{seconds}</p>
-          <p className="text-[10px] text-white/40 mt-1 tracking-[0.15em] uppercase">{label}</p>
+          <p className="text-3xl font-light text-white">{seconds}</p>
+          <p className="text-[11px] text-white/70 mt-1 tracking-[0.15em] uppercase">{label}</p>
         </div>
       </div>
 
       {/* Pattern description */}
-      <p className="text-[10px] text-white/20 tracking-wider">
+      <p className="text-[11px] text-white/45 tracking-wider">
         {TECHNIQUES[techIdx].phases.map(p => p.d).join(" – ")} giây
       </p>
     </div>
