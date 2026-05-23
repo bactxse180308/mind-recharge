@@ -94,7 +94,7 @@ const UnsentMessages = () => {
 
   const { mutate: createMsg, isPending: isSending } = useMutation({
     mutationFn: (body: { content?: string; imageUrl?: string; imageKey?: string }) =>
-      unsentMessageApi.create(body),
+      unsentMessageApi.create(unlockToken, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["unsent-messages"] });
       setInput("");
@@ -117,7 +117,7 @@ const UnsentMessages = () => {
   });
 
   const { mutate: releaseMsg } = useMutation({
-    mutationFn: (id: number) => unsentMessageApi.release(id),
+    mutationFn: (id: number) => unsentMessageApi.release(unlockToken, id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["unsent-messages"] });
       toast.success("Bạn vừa buông thêm một chút");
@@ -437,7 +437,7 @@ const UnsentMessages = () => {
 
                 {!msg.content?.trim() && !msg.imageUrl && (
                   <p className="text-sm text-foreground/90 leading-relaxed">
-                    Tin nhan #{msg.id}
+                    Tin nhắn #{msg.id}
                   </p>
                 )}
 

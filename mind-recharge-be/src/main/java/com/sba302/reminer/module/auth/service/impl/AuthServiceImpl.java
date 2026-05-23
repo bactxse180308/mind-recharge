@@ -70,7 +70,10 @@ class AuthServiceImpl implements AuthService {
         userRepository.save(user);
         log.info("New user registered: id={}", user.getId());
 
-        return buildAuthResponse(user, null);
+        String rawRefreshToken = UUID.randomUUID().toString();
+        saveRefreshToken(user, rawRefreshToken, "Web-Register");
+
+        return buildAuthResponse(user, rawRefreshToken);
     }
 
     @Override

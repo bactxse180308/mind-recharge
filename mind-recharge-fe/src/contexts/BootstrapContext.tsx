@@ -86,7 +86,7 @@ export const BootstrapProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const milestoneMessage = useCallback(
     (days: number): string | undefined => {
-      return bootstrap?.milestoneMessages?.[String(days)];
+      return bootstrap?.milestoneMessages?.[`DAY_${days}`];
     },
     [bootstrap]
   );
