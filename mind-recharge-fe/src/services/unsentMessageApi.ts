@@ -38,18 +38,31 @@ export const unsentMessageApi = {
       }
     ),
 
-  create: (body: { content?: string; imageUrl?: string; imageKey?: string }) =>
-    apiFetch<ApiResponse<UnsentMessageResponse>>("/api/v1/unsent-messages", {
+  create: (
+    unlockToken: string,
+    body: { content?: string; imageUrl?: string; imageKey?: string }
+  ) => {
+    const headers = unlockToken ? { "X-Unlock-Token": unlockToken } : undefined;
+    return apiFetch<ApiResponse<UnsentMessageResponse>>("/api/v1/unsent-messages", {
       method: "POST",
+      headers,
       body: JSON.stringify(body),
-    }),
+    });
+  },
 
-  release: (id: number) =>
-    apiFetch<ApiResponse<UnsentMessageResponse>>(
+  release: (unlockToken: string, id: number) => {
+    const headers = unlockToken ? { "X-Unlock-Token": unlockToken } : undefined;
+    return apiFetch<ApiResponse<UnsentMessageResponse>>(
       `/api/v1/unsent-messages/${id}/release`,
-      { method: "POST" }
-    ),
+      { method: "POST", headers }
+    );
+  },
 
-  delete: (id: number) =>
-    apiFetch<void>(`/api/v1/unsent-messages/${id}`, { method: "DELETE" }),
+  delete: (unlockToken: string, id: number) => {
+    const headers = unlockToken ? { "X-Unlock-Token": unlockToken } : undefined;
+    return apiFetch<void>(`/api/v1/unsent-messages/${id}`, {
+      method: "DELETE",
+      headers,
+    });
+  },
 };

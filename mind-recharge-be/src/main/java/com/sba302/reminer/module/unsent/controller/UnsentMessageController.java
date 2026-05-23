@@ -39,8 +39,12 @@ public class UnsentMessageController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create an unsent message")
-    public ApiResponse<UnsentMessageResponse> create(@Valid @RequestBody CreateUnsentMessageRequest request) {
-        return ApiResponse.created(unsentService.create(SecurityUtils.getCurrentUserId(), request));
+    public ApiResponse<UnsentMessageResponse> create(
+            @RequestHeader(value = "X-Unlock-Token", required = true) String unlockToken,
+            @Valid @RequestBody CreateUnsentMessageRequest request) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        tokenService.validateUnlockToken(userId, unlockToken);
+        return ApiResponse.created(unsentService.create(userId, request));
     }
 
     @PostMapping("/unlock")
@@ -73,15 +77,23 @@ public class UnsentMessageController {
 
     @PostMapping("/{id}/release")
     @Operation(summary = "Release / dissolve an unsent message")
-    public ApiResponse<UnsentMessageResponse> release(@PathVariable Long id) {
-        return ApiResponse.ok(unsentService.release(SecurityUtils.getCurrentUserId(), id));
+    public ApiResponse<UnsentMessageResponse> release(
+            @RequestHeader(value = "X-Unlock-Token", required = true) String unlockToken,
+            @PathVariable Long id) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        tokenService.validateUnlockToken(userId, unlockToken);
+        return ApiResponse.ok(unsentService.release(userId, id));
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Delete an unsent message")
-    public void delete(@PathVariable Long id) {
-        unsentService.delete(SecurityUtils.getCurrentUserId(), id);
+    public void delete(
+            @RequestHeader(value = "X-Unlock-Token", required = true) String unlockToken,
+            @PathVariable Long id) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        tokenService.validateUnlockToken(userId, unlockToken);
+        unsentService.delete(userId, id);
     }
 
     /**
@@ -123,9 +135,19 @@ public class UnsentMessageController {
     @Operation(summary = "Create unsent message for specific user (ADMIN or own profile)")
     public ApiResponse<UnsentMessageResponse> createForUser(
             @PathVariable Long userId,
+            @RequestHeader(value = "X-Unlock-Token", required = false) String unlockToken,
             @Valid @RequestBody CreateUnsentMessageRequest request,
             Authentication authentication) {
-        logAccess((CustomUserPrincipal) authentication.getPrincipal(), userId, "CREATE");
+        CustomUserPrincipal principal = (CustomUserPrincipal) authentication.getPrincipal();
+        logAccess(principal, userId, "CREATE");
+
+        if (!"ADMIN".equals(principal.getRoleName()) || principal.getUserId().equals(userId)) {
+            if (unlockToken == null || unlockToken.isBlank()) {
+                throw com.sba302.reminer.common.exception.AppException.unauthorized("Unlock token is required in header X-Unlock-Token.");
+            }
+            tokenService.validateUnlockToken(userId, unlockToken);
+        }
+
         return ApiResponse.created(unsentService.create(userId, request));
     }
 
@@ -138,8 +160,18 @@ public class UnsentMessageController {
     public ApiResponse<UnsentMessageResponse> releaseForUser(
             @PathVariable Long userId,
             @PathVariable Long id,
+            @RequestHeader(value = "X-Unlock-Token", required = false) String unlockToken,
             Authentication authentication) {
-        logAccess((CustomUserPrincipal) authentication.getPrincipal(), userId, "RELEASE");
+        CustomUserPrincipal principal = (CustomUserPrincipal) authentication.getPrincipal();
+        logAccess(principal, userId, "RELEASE");
+
+        if (!"ADMIN".equals(principal.getRoleName()) || principal.getUserId().equals(userId)) {
+            if (unlockToken == null || unlockToken.isBlank()) {
+                throw com.sba302.reminer.common.exception.AppException.unauthorized("Unlock token is required in header X-Unlock-Token.");
+            }
+            tokenService.validateUnlockToken(userId, unlockToken);
+        }
+
         return ApiResponse.ok(unsentService.release(userId, id));
     }
 
@@ -152,8 +184,18 @@ public class UnsentMessageController {
     public void deleteForUser(
             @PathVariable Long userId,
             @PathVariable Long id,
+            @RequestHeader(value = "X-Unlock-Token", required = false) String unlockToken,
             Authentication authentication) {
-        logAccess((CustomUserPrincipal) authentication.getPrincipal(), userId, "DELETE");
+        CustomUserPrincipal principal = (CustomUserPrincipal) authentication.getPrincipal();
+        logAccess(principal, userId, "DELETE");
+
+        if (!"ADMIN".equals(principal.getRoleName()) || principal.getUserId().equals(userId)) {
+            if (unlockToken == null || unlockToken.isBlank()) {
+                throw com.sba302.reminer.common.exception.AppException.unauthorized("Unlock token is required in header X-Unlock-Token.");
+            }
+            tokenService.validateUnlockToken(userId, unlockToken);
+        }
+
         unsentService.delete(userId, id);
     }
 

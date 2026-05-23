@@ -3,6 +3,7 @@ import { noContactApi, type DailyLogResponse } from "@/services/noContactApi";
 import { toast } from "sonner";
 import { useState } from "react";
 import { BookOpen, Trophy, RotateCcw } from "lucide-react";
+import { useBootstrap } from "@/contexts/BootstrapContext";
 
 const milestones = [1, 3, 7, 14, 30, 60, 90];
 
@@ -32,6 +33,7 @@ function formatLogDate(dateStr: string) {
 }
 
 const NoContactTracker = () => {
+  const { milestoneMessage } = useBootstrap();
   const qc = useQueryClient();
   const [resetInput, setResetInput] = useState("");
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -107,8 +109,9 @@ const NoContactTracker = () => {
   const justHitMilestone =
     latestAchievedMilestone !== null && latestAchievedMilestone === days;
 
+  const dbMilestoneMsg = milestoneMessage(days);
   const encouragement = justHitMilestone
-    ? milestoneMessages[days] ?? defaultEncouragements[days % defaultEncouragements.length]
+    ? dbMilestoneMsg ?? milestoneMessages[days] ?? defaultEncouragements[days % defaultEncouragements.length]
     : defaultEncouragements[days % defaultEncouragements.length];
 
   const stats = statsData?.data;

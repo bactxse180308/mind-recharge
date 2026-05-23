@@ -44,6 +44,7 @@ class NoContactServiceImpl implements NoContactService {
     private final UserRepository userRepository;
 
     @Override
+    @Transactional
     public NoContactJourneyResponse getCurrent(Long userId) {
         User user = findUser(userId);
         NoContactJourney journey = journeyRepo.findByUserIdAndStatus(userId, JourneyStatus.ACTIVE)
@@ -83,6 +84,7 @@ class NoContactServiceImpl implements NoContactService {
     }
 
     @Override
+    @Transactional
     public Page<NoContactJourneyResponse> history(Long userId, Pageable pageable) {
         User user = findUser(userId);
         return journeyRepo.findAllByUserId(userId, pageable)
@@ -178,12 +180,13 @@ class NoContactServiceImpl implements NoContactService {
 
     private NoContactJourneyResponse toResponse(NoContactJourney j, String timezone) {
         long streak = j.isActive() ? computeStreakDays(j.getStartedAt(), timezone) : 0;
-        List<Integer> milestones = milestoneRepo.findByJourneyIdOrderByMilestoneDayAsc(j.getId())
-                .stream().map(NoContactMilestoneEvent::getMilestoneDay).toList();
 
         if (j.isActive()) {
             recordMilestonesIfDue(j.getId(), streak);
         }
+
+        List<Integer> milestones = milestoneRepo.findByJourneyIdOrderByMilestoneDayAsc(j.getId())
+                .stream().map(NoContactMilestoneEvent::getMilestoneDay).toList();
 
         return NoContactJourneyResponse.builder()
                 .id(j.getId())
