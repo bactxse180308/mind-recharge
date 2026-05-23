@@ -19,6 +19,14 @@ const DAILY_TASK_ACTIONS: Record<string, DailyTaskAction> = {
     label: "Mở ngay",
     path: "/trigger",
   },
+  WRITE_JOURNAL: {
+    label: "Viết",
+    path: "/journal",
+  },
+  DEEP_BREATH: {
+    label: "Thở ngay",
+    path: "/trigger",
+  },
 };
 
 export const getDailyTaskAction = (
